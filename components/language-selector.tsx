@@ -15,8 +15,10 @@ type Language =
   | "ro"
   | "pl"
   | "ru"
+  | "zh"
   | "es"
   | "fr"
+  | "pt"
   | "sq"
   | "mk"
   | "sr"
@@ -68,6 +70,10 @@ export function LanguageSelector({ onLanguageSelect }: LanguageSelectorProps) {
     // Westeuropa (verbreitet)
     { code: "es" as Language, name: "Español", de: "Spanisch", it: "Spagnolo", en: "Spanish", flag: "🇪🇸" },
     { code: "fr" as Language, name: "Français", de: "Französisch", it: "Francese", en: "French", flag: "🇫🇷" },
+    { code: "pt" as Language, name: "Português", de: "Portugiesisch", it: "Portoghese", en: "Portuguese", flag: "🇵🇹" },
+
+    // Asien
+    { code: "zh" as Language, name: "中文", de: "Chinesisch", it: "Cinese", en: "Chinese", flag: "🇨🇳" },
   ]
 
   const filteredLanguages = moreLanguages.filter(

@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 import { LanguageSelector } from "./language-selector"
 
-type Language = "de" | "it" | "en" | "ar" | "hi" | "ur" | "tr" | "ro" | "pl" | "ru" | "zh" | "es" | "fr"
+type Language = "de" | "it" | "en" | "ar" | "hi" | "ur" | "tr" | "ro" | "pl" | "ru" | "zh" | "es" | "fr" | "pt"
 
 interface LanguageContextType {
   language: Language
