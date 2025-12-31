@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Phone, Mail, MapPin, Calendar, Home, Utensils, Briefcase } from "lucide-react"
 import JobDetailModal from "./job-detail-modal"
+import { useTranslation } from "@/hooks/use-translation"
 
 interface Job {
   id: string
@@ -28,6 +29,7 @@ interface JobCardProps {
 
 export default function JobCard({ job, onSelect }: JobCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const { t } = useTranslation()
 
   const handleContact = () => {
     if (onSelect) {
@@ -49,7 +51,7 @@ export default function JobCard({ job, onSelect }: JobCardProps) {
 
   return (
     <>
-      <Card className="bg-white border-0 shadow-xl hover:shadow-2xl transition-all duration-300 rounded-[2rem] overflow-hidden group">
+      <Card className="bg-white border-0 shadow-md hover:shadow-lg transition-all duration-300 rounded-3xl overflow-hidden group hover:-translate-y-1">
         <div className="flex flex-col sm:flex-row">
           {/* Left: Company Image */}
           <div className="relative w-full sm:w-32 md:w-40 h-32 sm:h-auto flex-shrink-0 bg-gradient-to-br from-teal-50 to-cyan-50">
@@ -59,17 +61,17 @@ export default function JobCard({ job, onSelect }: JobCardProps) {
                 alt={job.company}
                 width={120}
                 height={120}
-                className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-2xl shadow-md group-hover:scale-105 transition-transform duration-300"
+                className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-2xl shadow-md group-hover:scale-105 transition-transform duration-500 ease-out"
               />
             </div>
           </div>
 
           {/* Right: Job Information */}
-          <div className="flex-1 p-6 md:p-8 space-y-5">
+          <div className="flex-1 p-6 md:p-8 space-y-6">
             {/* Header: Title and Company */}
             <div>
-              <h3 className="text-xl md:text-2xl font-bold text-foreground leading-tight mb-2">{job.title}</h3>
-              <p className="text-base md:text-lg font-semibold text-teal-600">{job.company}</p>
+              <h3 className="text-2xl md:text-3xl font-bold text-foreground leading-tight mb-2 tracking-tight">{job.title}</h3>
+              <p className="text-sm md:text-base font-semibold text-teal-600 tracking-normal">{job.company}</p>
             </div>
 
             {/* Job Details */}
@@ -116,33 +118,33 @@ export default function JobCard({ job, onSelect }: JobCardProps) {
             <div className="flex flex-wrap gap-3 pt-3">
               <Button
                 size="lg"
-                className="flex-1 min-w-[160px] bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white py-6 text-base md:text-lg font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all hover:scale-[1.02]"
+                className="flex-1 min-w-[160px] bg-gradient-to-r from-teal-500 via-teal-400 to-teal-600 hover:from-teal-600 hover:via-teal-500 hover:to-teal-700 text-white py-6 text-base md:text-lg font-bold rounded-2xl shadow-lg hover:shadow-xl hover:glow-teal transition-all duration-300 hover:scale-[1.02] hover:ring-2 hover:ring-teal-300"
                 asChild
                 onClick={handleContact}
               >
                 <a href={`tel:${job.phone.replace(/\s/g, "")}`}>
                   <Phone className="mr-2.5 h-5 w-5" />
-                  Chiama
+                  {t("jobCard.call")}
                 </a>
               </Button>
               <Button
                 size="lg"
-                className="flex-1 min-w-[160px] bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 text-white py-6 text-base md:text-lg font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all hover:scale-[1.02]"
+                className="flex-1 min-w-[160px] bg-gradient-to-r from-cyan-500 via-cyan-400 to-cyan-600 hover:from-cyan-600 hover:via-cyan-500 hover:to-cyan-700 text-white py-6 text-base md:text-lg font-bold rounded-2xl shadow-lg hover:shadow-xl hover:glow-cyan transition-all duration-500 ease-out hover:scale-[1.02] hover:ring-2 hover:ring-cyan-300"
                 asChild
                 onClick={handleContact}
               >
                 <a href={`mailto:${job.email}?subject=Candidatura: ${job.title}`}>
                   <Mail className="mr-2.5 h-5 w-5" />
-                  E-Mail
+                  {t("jobCard.email")}
                 </a>
               </Button>
               <Button
                 size="lg"
                 variant="outline"
-                className="flex-1 min-w-[160px] border-2 border-border bg-white hover:bg-accent py-6 text-base md:text-lg font-bold rounded-2xl transition-all hover:shadow-md"
+                className="flex-1 min-w-[160px] border-2 border-border bg-white hover:bg-accent py-6 text-base md:text-lg font-bold rounded-2xl transition-all duration-500 ease-out hover:shadow-lg hover:scale-[1.02]"
                 onClick={() => setIsModalOpen(true)}
               >
-                Più informazioni
+                {t("jobCard.details")}
               </Button>
             </div>
           </div>

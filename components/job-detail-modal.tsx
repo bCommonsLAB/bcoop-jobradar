@@ -14,6 +14,7 @@ import {
   CheckCircle2,
   AlertCircle,
 } from "lucide-react"
+import { useTranslation } from "@/hooks/use-translation"
 
 interface Job {
   id: string
@@ -59,6 +60,7 @@ interface JobDetailModalProps {
 }
 
 export default function JobDetailModal({ job, isOpen, onClose }: JobDetailModalProps) {
+  const { t } = useTranslation()
   // Get first letter of company name for avatar
   const companyInitial = job.company.charAt(0).toUpperCase()
 
@@ -103,10 +105,10 @@ export default function JobDetailModal({ job, isOpen, onClose }: JobDetailModalP
               <span>•</span>
               <span>{job.location}</span>
               <span>•</span>
-              <span>Da {job.startDate}</span>
+              <span>{t("jobModal.from")} {job.startDate}</span>
             </div>
             {job.jobReference && (
-              <div className="mt-2 text-xs text-muted-foreground">Riferimento: {job.jobReference}</div>
+              <div className="mt-2 text-xs text-muted-foreground">{t("jobModal.reference")}: {job.jobReference}</div>
             )}
           </div>
 
@@ -142,7 +144,7 @@ export default function JobDetailModal({ job, isOpen, onClose }: JobDetailModalP
           {/* Descrizione del lavoro Section */}
           {job.fullDescription && (
             <div className="space-y-2">
-              <h3 className="font-bold text-lg">Descrizione del lavoro</h3>
+              <h3 className="font-bold text-lg">{t("jobModal.jobDescription")}</h3>
               <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{job.fullDescription}</p>
             </div>
           )}
@@ -150,7 +152,7 @@ export default function JobDetailModal({ job, isOpen, onClose }: JobDetailModalP
           {/* Mansioni Section */}
           {tasks.length > 0 && (
             <div className="space-y-3">
-              <h3 className="font-bold text-lg">Mansioni</h3>
+              <h3 className="font-bold text-lg">{t("jobModal.tasks")}</h3>
               <ul className="space-y-2">
                 {tasks.map((task, index) => (
                   <li key={index} className="flex items-start gap-2 text-sm text-muted-foreground">
@@ -180,13 +182,13 @@ export default function JobDetailModal({ job, isOpen, onClose }: JobDetailModalP
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {job.experienceLevel && (
                 <div className="bg-accent/50 rounded-xl p-3">
-                  <div className="text-xs font-semibold text-muted-foreground mb-1">Livello di esperienza</div>
+                  <div className="text-xs font-semibold text-muted-foreground mb-1">{t("jobModal.experienceLevel")}</div>
                   <div className="font-bold text-sm">{job.experienceLevel}</div>
                 </div>
               )}
               {job.education && (
                 <div className="bg-accent/50 rounded-xl p-3">
-                  <div className="text-xs font-semibold text-muted-foreground mb-1">Istruzione</div>
+                  <div className="text-xs font-semibold text-muted-foreground mb-1">{t("jobModal.education")}</div>
                   <div className="font-bold text-sm">{job.education}</div>
                 </div>
               )}
@@ -213,7 +215,7 @@ export default function JobDetailModal({ job, isOpen, onClose }: JobDetailModalP
                 )}
                 {job.certifications && job.certifications.length > 0 && (
                   <div>
-                    <h4 className="font-semibold text-sm mb-2">Certificazioni</h4>
+                    <h4 className="font-semibold text-sm mb-2">{t("jobModal.certifications")}</h4>
                     <div className="flex flex-wrap gap-2">
                       {job.certifications.map((cert, index) => (
                         <span
@@ -231,7 +233,7 @@ export default function JobDetailModal({ job, isOpen, onClose }: JobDetailModalP
 
           {/* Cosa offriamo Section */}
           <div className="space-y-3">
-            <h3 className="font-bold text-lg">Cosa offriamo</h3>
+            <h3 className="font-bold text-lg">{t("jobModal.whatWeOffer")}</h3>
             <ul className="space-y-2">
               {offers.map((offer, index) => (
                 <li key={index} className="flex items-start gap-2 text-sm text-muted-foreground">
@@ -258,28 +260,28 @@ export default function JobDetailModal({ job, isOpen, onClose }: JobDetailModalP
             {job.contractType && (
               <div className="flex items-center gap-2">
                 <Briefcase className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">Contratto:</span>
+                <span className="text-muted-foreground">{t("jobModal.contract")}:</span>
                 <span className="font-semibold">{job.contractType}</span>
               </div>
             )}
             {job.workingHours && (
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">Orario:</span>
+                <span className="text-muted-foreground">{t("jobModal.workingHours")}:</span>
                 <span className="font-semibold">{job.workingHours}</span>
               </div>
             )}
             {job.numberOfPositions && (
               <div className="flex items-center gap-2">
                 <User className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">Posizioni:</span>
+                <span className="text-muted-foreground">{t("jobModal.positions")}:</span>
                 <span className="font-semibold">{job.numberOfPositions}</span>
               </div>
             )}
             {job.applicationDeadline && (
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">Scadenza:</span>
+                <span className="text-muted-foreground">{t("jobModal.deadline")}:</span>
                 <span className="font-semibold">{job.applicationDeadline}</span>
               </div>
             )}
@@ -317,7 +319,7 @@ export default function JobDetailModal({ job, isOpen, onClose }: JobDetailModalP
             className="w-full py-6 text-base font-bold rounded-2xl bg-foreground hover:bg-foreground/90"
             onClick={handleApply}
           >
-            Candidati ora
+            {t("jobModal.apply")}
           </Button>
         </div>
       </DialogContent>

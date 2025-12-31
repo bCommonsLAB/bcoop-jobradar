@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 import { LanguageSelector } from "./language-selector"
 
-type Language = "de" | "it" | "en" | "ar" | "hi" | "ur" | "tr" | "ro" | "pl" | "ru" | "zh" | "es" | "fr" | "pt"
+export type Language = "de" | "it" | "en" | "ar" | "hi" | "ur" | "tr" | "ro" | "pl" | "ru" | "zh" | "es" | "fr" | "pt" | "sq" | "mk" | "sr" | "hr" | "bs" | "bg" | "uk" | "bn"
 
 interface LanguageContextType {
   language: Language
@@ -11,7 +11,7 @@ interface LanguageContextType {
   resetLanguage: () => void
 }
 
-const LanguageContext = createContext<LanguageContextType | undefined>(undefined)
+export const LanguageContext = createContext<LanguageContextType | undefined>(undefined)
 
 export function useLanguage() {
   const context = useContext(LanguageContext)
@@ -26,22 +26,41 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const savedLanguage = localStorage.getItem("job-radar-language") as Language | null
+    // Check if we're in the browser
+    if (typeof window !== "undefined") {
+      try {
+        const savedLanguage = localStorage.getItem("job-radar-language") as Language | null
 
-    if (savedLanguage) {
-      setLanguageState(savedLanguage)
+        if (savedLanguage) {
+          setLanguageState(savedLanguage)
+        }
+      } catch (error) {
+        console.error("Error reading from localStorage:", error)
+      }
     }
     setIsLoading(false)
   }, [])
 
   const setLanguage = (newLanguage: Language) => {
     setLanguageState(newLanguage)
-    localStorage.setItem("job-radar-language", newLanguage)
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem("job-radar-language", newLanguage)
+      } catch (error) {
+        console.error("Error writing to localStorage:", error)
+      }
+    }
   }
 
   const resetLanguage = () => {
     setLanguageState(null)
-    localStorage.removeItem("job-radar-language")
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.removeItem("job-radar-language")
+      } catch (error) {
+        console.error("Error removing from localStorage:", error)
+      }
+    }
   }
 
   if (isLoading) {
@@ -53,7 +72,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   }
 
   if (!language) {
-    return <LanguageSelector onLanguageSelect={setLanguage} />
+    return <LanguageSelector onLanguageSelect={setLanguage} isInitialSelection={true} />
   }
 
   return (

@@ -33,9 +33,15 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
+  params,
+  searchParams,
 }: Readonly<{
   children: React.ReactNode
+  params?: Promise<Record<string, string | string[]>>
+  searchParams?: Promise<Record<string, string | string[]>>
 }>) {
+  // params und searchParams werden nicht verwendet, aber explizit deklariert,
+  // um den Next.js 16 Promise-Fehler zu vermeiden
   return (
     <html lang="de">
       <body className={`${inter.className} antialiased`}>
