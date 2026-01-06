@@ -12,6 +12,7 @@ interface JobListProps {
     jobTypes: string[]
     timeframe: string
     locations: string[]
+    noQualificationRequired: boolean
   }
   onJobSelect: () => void
 }
@@ -120,6 +121,20 @@ export default function JobList({ filters, onJobSelect }: JobListProps) {
       }
     }
 
+    // Filter by qualification requirement
+    if (filters.noQualificationRequired) {
+      // A job has no qualification requirements if:
+      // - experienceLevel === "Principiante" OR
+      // - (experienceLevel is undefined/missing AND education is undefined/missing)
+      const hasNoQualification = 
+        job.experienceLevel === "Principiante" ||
+        (!job.experienceLevel && !job.education)
+      
+      if (!hasNoQualification) {
+        return false
+      }
+    }
+
     return true
   })
 
@@ -177,14 +192,14 @@ export default function JobList({ filters, onJobSelect }: JobListProps) {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold text-foreground mb-6">
+      <h2 className="text-lg md:text-xl font-bold text-foreground mb-4 md:mb-5">
         {isLoading ? (
-          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-6 md:h-8 w-32 md:w-48" />
         ) : (
           `${sortedJobs.length} ${t("jobList.jobsFound")}`
         )}
       </h2>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 gap-2.5 md:gap-3 lg:gap-4">
         {isLoading ? (
           <>
             <JobCardSkeleton />
@@ -196,12 +211,12 @@ export default function JobList({ filters, onJobSelect }: JobListProps) {
           sortedJobs.map((job) => <JobCard key={job.id} job={job} onSelect={onJobSelect} />)
         ) : (
           <div className="col-span-full">
-            <div className="bg-white rounded-[2rem] p-12 md:p-16 shadow-xl text-center border-2 border-border">
-              <div className="flex flex-col items-center gap-4">
-                <SearchX className="w-16 h-16 md:w-20 md:h-20 text-muted-foreground opacity-50" />
-                <div className="space-y-2">
-                  <h3 className="text-2xl md:text-3xl font-bold text-foreground">{t("jobList.noJobsFound")}</h3>
-                  <p className="text-lg md:text-xl text-muted-foreground">
+            <div className="bg-white rounded-xl md:rounded-2xl p-8 md:p-12 shadow-xl text-center border-2 border-border">
+              <div className="flex flex-col items-center gap-3 md:gap-4">
+                <SearchX className="w-12 h-12 md:w-16 md:h-16 text-muted-foreground opacity-50" />
+                <div className="space-y-1.5 md:space-y-2">
+                  <h3 className="text-xl md:text-2xl font-bold text-foreground">{t("jobList.noJobsFound")}</h3>
+                  <p className="text-sm md:text-base text-muted-foreground">
                     {t("jobList.tryModifySelection")}
                   </p>
                 </div>

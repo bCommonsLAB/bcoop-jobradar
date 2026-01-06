@@ -15,16 +15,20 @@ import {
   Search,
   Briefcase,
   X,
+  GraduationCap,
 } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
 import { useTranslation } from "@/hooks/use-translation"
 
 interface JobFiltersProps {
-  onSubmit: (filters: { jobTypes: string[]; timeframe: string; locations: string[] }) => void
-  initialFilters?: { jobTypes: string[]; timeframe: string; locations: string[] }
+  onSubmit: (filters: { jobTypes: string[]; timeframe: string; locations: string[]; noQualificationRequired: boolean }) => void
+  initialFilters?: { jobTypes: string[]; timeframe: string; locations: string[]; noQualificationRequired?: boolean }
   autoApply?: boolean
   showSubmitButton?: boolean
+  title?: string
 }
 
 interface CustomJob {
@@ -37,12 +41,14 @@ export default function JobFilters({
   onSubmit, 
   initialFilters, 
   autoApply = false,
-  showSubmitButton = true 
+  showSubmitButton = true,
+  title
 }: JobFiltersProps) {
   const { t } = useTranslation()
   const [jobTypes, setJobTypes] = useState<string[]>(initialFilters?.jobTypes || [])
   const [timeframe, setTimeframe] = useState<string>(initialFilters?.timeframe || "all")
   const [locations, setLocations] = useState<string[]>(initialFilters?.locations || [])
+  const [noQualificationRequired, setNoQualificationRequired] = useState<boolean>(initialFilters?.noQualificationRequired || false)
   const [isJobSelectorOpen, setIsJobSelectorOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [customJobs, setCustomJobs] = useState<CustomJob[]>([])
@@ -53,6 +59,7 @@ export default function JobFilters({
       setJobTypes(initialFilters.jobTypes || [])
       setTimeframe(initialFilters.timeframe || "all")
       setLocations(initialFilters.locations || [])
+      setNoQualificationRequired(initialFilters.noQualificationRequired || false)
     }
   }, [initialFilters])
 
@@ -97,7 +104,7 @@ export default function JobFilters({
     setSearchQuery("")
     
     if (autoApply) {
-      onSubmit({ jobTypes: newJobTypes, timeframe, locations })
+      onSubmit({ jobTypes: newJobTypes, timeframe, locations, noQualificationRequired })
     }
   }
 
@@ -107,12 +114,19 @@ export default function JobFilters({
     setJobTypes(jobTypes.filter((t) => t !== jobValue))
     
     if (autoApply) {
-      onSubmit({ jobTypes: jobTypes.filter((t) => t !== jobValue), timeframe, locations })
+      onSubmit({ jobTypes: jobTypes.filter((t) => t !== jobValue), timeframe, locations, noQualificationRequired })
     }
   }
 
   const handleSubmit = () => {
-    onSubmit({ jobTypes, timeframe, locations })
+    onSubmit({ jobTypes, timeframe, locations, noQualificationRequired })
+  }
+
+  const handleQualificationToggle = (checked: boolean) => {
+    setNoQualificationRequired(checked)
+    if (autoApply) {
+      onSubmit({ jobTypes, timeframe, locations, noQualificationRequired: checked })
+    }
   }
 
   const handleJobTypeToggle = (value: string) => {
@@ -132,7 +146,7 @@ export default function JobFilters({
     setJobTypes(newJobTypes)
     
     if (autoApply) {
-      onSubmit({ jobTypes: newJobTypes, timeframe, locations })
+      onSubmit({ jobTypes: newJobTypes, timeframe, locations, noQualificationRequired })
     }
   }
 
@@ -153,7 +167,7 @@ export default function JobFilters({
     setLocations(newLocations)
     
     if (autoApply) {
-      onSubmit({ jobTypes, timeframe, locations: newLocations })
+      onSubmit({ jobTypes, timeframe, locations: newLocations, noQualificationRequired })
     }
   }
 
@@ -161,7 +175,7 @@ export default function JobFilters({
     if (filterType === "timeframe") {
       setTimeframe(value)
       if (autoApply) {
-        onSubmit({ jobTypes, timeframe: value, locations })
+        onSubmit({ jobTypes, timeframe: value, locations, noQualificationRequired })
       }
     }
   }
@@ -187,7 +201,14 @@ export default function JobFilters({
   ]
 
   return (
-    <div className="bg-white rounded-3xl p-6 md:p-8 shadow-md space-y-10">
+    <div className="bg-white rounded-xl md:rounded-3xl p-2 md:p-6 shadow-lg space-y-3 md:space-y-6">
+      {title && (
+        <div className="pb-2 md:pb-4 border-b border-border/50">
+          <h2 className="text-lg md:text-3xl lg:text-4xl font-bold text-foreground leading-tight tracking-tight">
+            {title}
+          </h2>
+        </div>
+      )}
       <Dialog open={isJobSelectorOpen} onOpenChange={setIsJobSelectorOpen}>
         <DialogContent className="sm:max-w-[600px] max-h-[80vh] rounded-[2rem] p-0 overflow-hidden">
           <DialogHeader className="p-6 border-b border-border">
@@ -232,9 +253,25 @@ export default function JobFilters({
       </Dialog>
 
       {/* Job Type */}
-      <div className="space-y-5">
-        <label className="block text-2xl md:text-3xl font-bold text-foreground">{t("filters.jobType")}</label>
-        <div className="grid grid-cols-2 gap-4">
+      <div className="space-y-2 md:space-y-3">
+        <label className="block text-base md:text-xl font-bold text-foreground">{t("filters.jobType")}</label>
+        
+        {/* Qualification */}
+        <div className="flex items-center justify-between p-2 md:p-3 rounded-lg md:rounded-xl border border-border/50 bg-gradient-to-br from-white to-gray-50/50">
+          <div className="flex items-center gap-1.5 md:gap-2.5">
+            <GraduationCap className="w-3.5 h-3.5 md:w-5 md:h-5 text-primary" />
+            <Label htmlFor="qualification-toggle" className="text-xs md:text-base font-medium text-foreground cursor-pointer">
+              {t("filters.noQualificationRequired")}
+            </Label>
+          </div>
+          <Switch
+            id="qualification-toggle"
+            checked={noQualificationRequired}
+            onCheckedChange={handleQualificationToggle}
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-1.5 md:gap-3">
           {jobTypeOptions.map((type) => {
             const Icon = type.icon
             const isSelected = jobTypes.includes(type.value)
@@ -242,13 +279,13 @@ export default function JobFilters({
               <button
                 key={type.value}
                 onClick={() => handleJobTypeToggle(type.value)}
-                className={`py-4 px-4 rounded-2xl text-base md:text-lg font-bold transition-all duration-200 border-2 flex flex-col items-center gap-3 ${
+                className={`py-2 md:py-3 px-2 md:px-3.5 rounded-lg md:rounded-xl text-[11px] md:text-sm font-bold transition-all duration-200 border-2 flex flex-col items-center gap-1 md:gap-2 ${
                   isSelected
                     ? "bg-gradient-to-br from-primary to-cyan-600 text-white border-primary shadow-lg scale-[1.02] ring-1 ring-primary/30"
                     : "bg-gradient-to-br from-white to-gray-50 text-foreground border-border/50 hover:border-primary/50 hover:shadow-md hover:scale-[1.02]"
                 }`}
               >
-                <Icon className={`w-6 h-6 ${isSelected ? "text-white" : "text-primary"}`} />
+                <Icon className={`w-3.5 h-3.5 md:w-5 md:h-5 ${isSelected ? "text-white" : "text-primary"}`} />
                 {type.label}
               </button>
             )
@@ -259,27 +296,27 @@ export default function JobFilters({
               <div
                 key={job.value}
                 onClick={() => handleJobTypeToggle(job.value)}
-                className={`py-4 px-4 rounded-2xl text-base md:text-lg font-bold transition-all duration-200 border-2 flex flex-col items-center gap-3 relative cursor-pointer ${
+                className={`py-2 md:py-3 px-2 md:px-3.5 rounded-lg md:rounded-xl text-[11px] md:text-sm font-bold transition-all duration-200 border-2 flex flex-col items-center gap-1 md:gap-2 relative cursor-pointer ${
                   isSelected
                     ? "bg-gradient-to-br from-primary to-cyan-600 text-white border-primary shadow-lg scale-[1.02] ring-1 ring-primary/30"
                     : "bg-gradient-to-br from-white to-gray-50 text-foreground border-border/50 hover:border-primary/50 hover:shadow-md hover:scale-[1.02]"
                 }`}
               >
-                <Briefcase className={`w-7 h-7 ${isSelected ? "text-white" : "text-primary"}`} />
-                <span className="text-sm leading-tight">{job.title}</span>
+                <Briefcase className={`w-3.5 h-3.5 md:w-5 md:h-5 ${isSelected ? "text-white" : "text-primary"}`} />
+                <span className="text-xs leading-tight">{job.title}</span>
                 {/* Remove button */}
                 <button
                   onClick={(e) => {
                     e.stopPropagation()
                     removeCustomJob(job.id)
                   }}
-                  className={`absolute -top-2 -right-2 w-7 h-7 rounded-full flex items-center justify-center transition-all ${
+                  className={`absolute -top-1.5 -right-1.5 w-6 h-6 md:w-7 md:h-7 rounded-full flex items-center justify-center transition-all ${
                     isSelected
                       ? "bg-white text-primary hover:bg-gray-100"
                       : "bg-red-500 text-white hover:bg-red-600"
                   }`}
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-3 h-3 md:w-4 md:h-4" />
                 </button>
               </div>
             )
@@ -287,17 +324,17 @@ export default function JobFilters({
         </div>
         <button
           onClick={() => setIsJobSelectorOpen(true)}
-          className="w-full py-4 px-5 rounded-2xl text-base md:text-lg font-semibold transition-all duration-200 border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-cyan-50 text-primary hover:border-primary hover:shadow-md hover:scale-[1.02] flex items-center justify-center gap-3"
+          className="w-full py-2 md:py-3 px-2 md:px-4 rounded-lg md:rounded-xl text-[11px] md:text-sm font-semibold transition-all duration-200 border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-cyan-50 text-primary hover:border-primary hover:shadow-md hover:scale-[1.02] flex items-center justify-center gap-1.5"
         >
-          <Search className="w-5 h-5" />
+          <Search className="w-3 h-3 md:w-4 md:h-4" />
           Altri lavori
         </button>
       </div>
 
       {/* Timeframe */}
-      <div className="space-y-5">
-        <label className="block text-2xl md:text-3xl font-bold text-foreground">{t("filters.period")}</label>
-        <div className="grid grid-cols-3 gap-4">
+      <div className="space-y-2 md:space-y-3">
+        <label className="block text-base md:text-xl font-bold text-foreground">{t("filters.period")}</label>
+        <div className="grid grid-cols-3 gap-1.5 md:gap-3">
           {[
             { value: "all", label: t("timeframes.all") },
             { value: "week", label: t("timeframes.week") },
@@ -306,7 +343,7 @@ export default function JobFilters({
             <button
               key={time.value}
               onClick={() => handleFilterChange("timeframe", time.value)}
-              className={`py-4 px-4 rounded-2xl text-base md:text-lg font-bold transition-all duration-200 border-2 ${
+              className={`py-2 md:py-3 px-2 md:px-3.5 rounded-lg md:rounded-xl text-[11px] md:text-sm font-bold transition-all duration-200 border-2 ${
                 timeframe === time.value
                   ? "bg-gradient-to-br from-primary to-cyan-600 text-white border-primary shadow-lg scale-[1.02] ring-1 ring-primary/30"
                   : "bg-gradient-to-br from-white to-gray-50 text-foreground border-border/50 hover:border-primary/50 hover:shadow-md hover:scale-[1.02]"
@@ -319,9 +356,9 @@ export default function JobFilters({
       </div>
 
       {/* Location */}
-      <div className="space-y-5">
-        <label className="block text-2xl md:text-3xl font-bold text-foreground">{t("filters.location")}</label>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+      <div className="space-y-2 md:space-y-3">
+        <label className="block text-base md:text-xl font-bold text-foreground">{t("filters.location")}</label>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-1.5 md:gap-3">
           {locationOptions.map((loc) => {
             const Icon = loc.icon
             const isSelected = locations.includes(loc.value)
@@ -329,13 +366,13 @@ export default function JobFilters({
               <button
                 key={loc.value}
                 onClick={() => handleLocationToggle(loc.value)}
-                className={`py-4 px-4 rounded-2xl text-base md:text-lg font-bold transition-all duration-200 border-2 flex flex-col items-center gap-3 ${
+                className={`py-2 md:py-3 px-2 md:px-3.5 rounded-lg md:rounded-xl text-[11px] md:text-sm font-bold transition-all duration-200 border-2 flex flex-col items-center gap-1 md:gap-2 ${
                   isSelected
                     ? "bg-gradient-to-br from-primary to-cyan-600 text-white border-primary shadow-lg scale-[1.02] ring-1 ring-primary/30"
                     : "bg-gradient-to-br from-white to-gray-50 text-foreground border-border/50 hover:border-primary/50 hover:shadow-md hover:scale-[1.02]"
                 }`}
               >
-                <Icon className={`w-7 h-7 ${isSelected ? "text-white" : "text-primary"}`} />
+                <Icon className={`w-3.5 h-3.5 md:w-5 md:h-5 ${isSelected ? "text-white" : "text-primary"}`} />
                 {loc.label}
               </button>
             )
@@ -347,10 +384,10 @@ export default function JobFilters({
         <Button
           onClick={handleSubmit}
           size="lg"
-          className="w-full py-6 text-xl font-bold shadow-lg gap-3 rounded-2xl bg-gradient-to-r from-primary via-primary/90 to-cyan-600 hover:from-primary/90 hover:via-primary/80 hover:to-cyan-600/90 transition-all duration-200 hover:scale-[1.02] hover:shadow-xl hover:glow-primary"
+          className="w-full py-2.5 md:py-4 text-sm md:text-lg font-bold shadow-lg gap-1.5 rounded-lg md:rounded-xl bg-gradient-to-r from-primary via-primary/90 to-cyan-600 hover:from-primary/90 hover:via-primary/80 hover:to-cyan-600/90 transition-all duration-200 hover:scale-[1.02] hover:shadow-xl hover:glow-primary"
         >
           {t("filters.continueToOffers")}
-          <ArrowRight className="w-6 h-6" />
+          <ArrowRight className="w-3.5 h-3.5 md:w-5 md:h-5" />
         </Button>
       )}
     </div>

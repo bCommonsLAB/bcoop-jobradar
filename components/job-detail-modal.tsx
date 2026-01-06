@@ -1,6 +1,6 @@
 "use client"
 
-import { Dialog, DialogContent, DialogHeader } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import {
   X,
@@ -85,6 +85,7 @@ export default function JobDetailModal({ job, isOpen, onClose }: JobDetailModalP
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 rounded-3xl">
         {/* Header */}
         <DialogHeader className="relative p-6 pb-4">
+          <DialogTitle className="sr-only">{job.title}</DialogTitle>
           <button
             onClick={onClose}
             className="absolute left-4 top-4 rounded-full p-2 hover:bg-accent transition-colors z-10"

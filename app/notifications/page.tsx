@@ -1,82 +1,17 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { ArrowLeft, Languages } from "lucide-react"
+import { ArrowLeft, Languages, Bell } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import StepIndicator from "@/components/step-indicator"
-import JobFilters from "@/components/job-filters"
-import JobList from "@/components/job-list"
-import ActiveFilters from "@/components/active-filters"
+import JobNotifications from "@/components/job-notifications"
 import { LanguageProvider, useLanguage } from "@/components/language-provider"
 import { LanguageToggleButton } from "@/components/language-toggle-button"
 import { useTranslation } from "@/hooks/use-translation"
 
-function JobsPageContent() {
-  const [currentStep, setCurrentStep] = useState<1 | 2>(1)
-  const [filters, setFilters] = useState({
-    jobTypes: [] as string[],
-    timeframe: "all",
-    locations: [] as string[],
-    noQualificationRequired: false,
-  })
+function NotificationsPageContent() {
   const { resetLanguage } = useLanguage()
   const { t } = useTranslation()
-
-  const handleFiltersSubmit = (newFilters: typeof filters) => {
-    setFilters(newFilters)
-    setCurrentStep(2)
-    // Scroll to top immediately when switching to step 2
-    if (typeof window !== "undefined") {
-      // Scroll immediately without animation
-      window.scrollTo(0, 0)
-      // Also use requestAnimationFrame to ensure it happens after render
-      requestAnimationFrame(() => {
-        window.scrollTo(0, 0)
-      })
-    }
-  }
-
-  // Auto-scroll to top when switching to step 2 (fallback)
-  useEffect(() => {
-    if (currentStep === 2 && typeof window !== "undefined") {
-      // Scroll immediately without animation
-      window.scrollTo(0, 0)
-      // Use requestAnimationFrame to ensure DOM is updated
-      requestAnimationFrame(() => {
-        window.scrollTo(0, 0)
-      })
-    }
-  }, [currentStep])
-
-  // Handler zum Entfernen einzelner Filter
-  const handleRemoveFilter = (filterType: "jobTypes" | "timeframe" | "locations" | "noQualificationRequired", value?: string) => {
-    setFilters((prev) => {
-      if (filterType === "timeframe") {
-        return {
-          ...prev,
-          timeframe: "all",
-        }
-      } else if (filterType === "jobTypes" && value) {
-        return {
-          ...prev,
-          jobTypes: prev.jobTypes.filter((t) => t !== value),
-        }
-      } else if (filterType === "locations" && value) {
-        return {
-          ...prev,
-          locations: prev.locations.filter((l) => l !== value),
-        }
-      } else if (filterType === "noQualificationRequired") {
-        return {
-          ...prev,
-          noQualificationRequired: false,
-        }
-      }
-      return prev
-    })
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-accent/10 to-accent/20">
@@ -130,29 +65,22 @@ function JobsPageContent() {
         </Link>
       </div>
 
-      <div className="max-w-6xl mx-auto px-2 md:px-5 py-1 md:py-3">
-        <StepIndicator currentStep={currentStep} />
-      </div>
-
-      <div className="max-w-6xl mx-auto px-2 md:px-5 pb-3 md:pb-6">
-        {currentStep === 1 && (
-          <JobFilters onSubmit={handleFiltersSubmit} title={t("jobs.step1Title")} />
-        )}
-
-        {currentStep === 2 && (
-          <div>
-            <div className="bg-white rounded-xl md:rounded-3xl p-2 md:p-5 shadow-md mb-3 md:mb-6 transition-all duration-200 hover:shadow-lg">
-              <h2 className="text-lg md:text-2xl lg:text-3xl font-bold text-foreground mb-1.5 md:mb-3 leading-tight tracking-tight">
-                {t("jobs.step2Title")}
-              </h2>
+      <div className="max-w-6xl mx-auto px-2 md:px-5 py-2 md:py-5">
+        <div className="bg-white rounded-xl md:rounded-3xl p-2 md:p-5 shadow-md mb-3 md:mb-6 transition-all duration-200 hover:shadow-lg">
+          <div className="flex items-center gap-1.5 md:gap-3 mb-1.5 md:mb-3">
+            <div className="w-7 h-7 md:w-10 md:h-10 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-lg md:rounded-2xl flex items-center justify-center shadow-md">
+              <Bell className="w-3.5 h-3.5 md:w-5 md:h-5 text-white" />
             </div>
-            
-            {/* Zeige aktive Filter an */}
-            <ActiveFilters filters={filters} onRemoveFilter={handleRemoveFilter} />
-            
-            <JobList filters={filters} onJobSelect={() => {}} />
+            <h2 className="text-lg md:text-2xl lg:text-3xl font-bold text-foreground leading-tight tracking-tight">
+              {t("notifications.title")}
+            </h2>
           </div>
-        )}
+          <p className="text-[11px] md:text-sm text-muted-foreground leading-relaxed tracking-normal">
+            {t("notifications.description")}
+          </p>
+        </div>
+
+        <JobNotifications />
       </div>
 
       <footer className="bg-white border-t border-border py-2 md:py-5 px-2 md:px-4 mt-2 md:mt-6">
@@ -170,10 +98,11 @@ function JobsPageContent() {
   )
 }
 
-export default function JobsPage() {
+export default function NotificationsPage() {
   return (
     <LanguageProvider>
-      <JobsPageContent />
+      <NotificationsPageContent />
     </LanguageProvider>
   )
 }
+

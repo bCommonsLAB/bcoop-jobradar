@@ -12,10 +12,11 @@ import JobFilters from "@/components/job-filters"
 import { useTranslation } from "@/hooks/use-translation"
 
 interface JobNotificationsProps {
-  filters: {
+  filters?: {
     jobTypes: string[]
     timeframe: string
     locations: string[]
+    noQualificationRequired?: boolean
   }
 }
 
@@ -32,12 +33,13 @@ interface NotificationSettings {
     jobTypes: string[]
     timeframe: string
     locations: string[]
+    noQualificationRequired: boolean
   }
 }
 
 const STORAGE_KEY = "job-radar-notifications"
 
-export default function JobNotifications({ filters }: JobNotificationsProps) {
+export default function JobNotifications({ filters: propsFilters }: JobNotificationsProps) {
   const { t } = useTranslation()
   const [settings, setSettings] = useState<NotificationSettings>({
     enabled: false,
@@ -52,8 +54,12 @@ export default function JobNotifications({ filters }: JobNotificationsProps) {
       jobTypes: [],
       timeframe: "all",
       locations: [],
+      noQualificationRequired: false,
     },
   })
+
+  // Verwende übergebene Filter oder gespeicherte Filter aus Settings
+  const filters = propsFilters ?? settings.filters
 
   // Lade gespeicherte Einstellungen beim Mount
   useEffect(() => {
@@ -72,11 +78,17 @@ export default function JobNotifications({ filters }: JobNotificationsProps) {
             whatsappEnabled: parsed.whatsappEnabled ?? false,
             selectedDays: parsed.selectedDays ?? [],
             notificationTime: parsed.notificationTime ?? "09:00",
-            filters: parsed.filters ?? {
-              jobTypes: [],
-              timeframe: "all",
-              locations: [],
-            },
+              filters: parsed.filters
+                ? {
+                    ...parsed.filters,
+                    noQualificationRequired: parsed.filters.noQualificationRequired ?? false,
+                  }
+                : {
+                    jobTypes: [],
+                    timeframe: "all",
+                    locations: [],
+                    noQualificationRequired: false,
+                  },
           })
         }
       } catch (error) {
@@ -199,10 +211,12 @@ export default function JobNotifications({ filters }: JobNotificationsProps) {
     return sortedA.every((val, index) => val === sortedB[index])
   }
 
-  const filtersChanged =
-    !arraysEqual(settings.filters.jobTypes || [], filters.jobTypes || []) ||
-    settings.filters.timeframe !== filters.timeframe ||
-    !arraysEqual(settings.filters.locations || [], filters.locations || [])
+  const filtersChanged = propsFilters
+    ? (!arraysEqual(settings.filters.jobTypes || [], filters.jobTypes || []) ||
+       settings.filters.timeframe !== filters.timeframe ||
+       !arraysEqual(settings.filters.locations || [], filters.locations || []) ||
+       settings.filters.noQualificationRequired !== (filters.noQualificationRequired ?? false))
+    : false
 
   const daysOfWeek = [
     { key: "monday", label: t("notifications.monday") },
@@ -217,16 +231,16 @@ export default function JobNotifications({ filters }: JobNotificationsProps) {
   const renderCommonSections = () => (
     <>
       {/* Filter-Bereich (Collapsible) */}
-      <Collapsible defaultOpen={false} className="mb-4">
-        <CollapsibleTrigger className="w-full flex items-center justify-between p-3 rounded-xl border border-border hover:bg-gray-50 transition-all">
-          <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-primary" />
-            <span className="text-sm font-semibold text-foreground">{t("notifications.selectFilters")}</span>
+      <Collapsible defaultOpen={false} className="mb-3">
+        <CollapsibleTrigger className="w-full flex items-center justify-between p-2.5 md:p-3 rounded-lg md:rounded-xl border border-border hover:bg-gray-50 transition-all">
+          <div className="flex items-center gap-1.5 md:gap-2">
+            <Filter className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary" />
+            <span className="text-xs md:text-sm font-semibold text-foreground">{t("notifications.selectFilters")}</span>
           </div>
-          <ChevronDown className="w-4 h-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+          <ChevronDown className="w-3.5 h-3.5 md:w-4 md:h-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
         </CollapsibleTrigger>
         <CollapsibleContent className="mt-2 data-[state=open]:animate-in data-[state=closed]:animate-out">
-          <div className="p-4 border border-border rounded-xl bg-gray-50/50">
+          <div className="p-3 md:p-4 border border-border rounded-lg md:rounded-xl bg-gray-50/50">
             <JobFilters
               onSubmit={handleFiltersChange}
               initialFilters={settings.filters}
@@ -238,14 +252,14 @@ export default function JobNotifications({ filters }: JobNotificationsProps) {
       </Collapsible>
 
       {/* Frequenz-Auswahl */}
-      <div className="mb-4">
-        <Label className="text-sm font-semibold text-foreground mb-2 block">
+      <div className="mb-3">
+        <Label className="text-xs md:text-sm font-semibold text-foreground mb-1.5 md:mb-2 block">
           {t("notifications.frequency")}
         </Label>
-        <div className="flex gap-3">
+        <div className="flex gap-2 md:gap-2.5">
           <button
             onClick={() => handleFrequencyChange("daily")}
-            className={`flex-1 py-2 px-4 rounded-xl text-sm font-medium transition-all ${
+            className={`flex-1 py-2 md:py-2.5 px-3 md:px-4 rounded-lg md:rounded-xl text-xs md:text-sm font-medium transition-all ${
               settings.frequency === "daily"
                 ? "bg-primary text-white shadow-md"
                 : "bg-gray-100 text-foreground hover:bg-gray-200"
@@ -255,7 +269,7 @@ export default function JobNotifications({ filters }: JobNotificationsProps) {
           </button>
           <button
             onClick={() => handleFrequencyChange("weekly")}
-            className={`flex-1 py-2 px-4 rounded-xl text-sm font-medium transition-all ${
+            className={`flex-1 py-2 md:py-2.5 px-3 md:px-4 rounded-lg md:rounded-xl text-xs md:text-sm font-medium transition-all ${
               settings.frequency === "weekly"
                 ? "bg-primary text-white shadow-md"
                 : "bg-gray-100 text-foreground hover:bg-gray-200"
@@ -265,7 +279,7 @@ export default function JobNotifications({ filters }: JobNotificationsProps) {
           </button>
           <button
             onClick={() => handleFrequencyChange("monthly")}
-            className={`flex-1 py-2 px-4 rounded-xl text-sm font-medium transition-all ${
+            className={`flex-1 py-2 md:py-2.5 px-3 md:px-4 rounded-lg md:rounded-xl text-xs md:text-sm font-medium transition-all ${
               settings.frequency === "monthly"
                 ? "bg-primary text-white shadow-md"
                 : "bg-gray-100 text-foreground hover:bg-gray-200"
@@ -277,13 +291,13 @@ export default function JobNotifications({ filters }: JobNotificationsProps) {
       </div>
 
       {/* Tage-Auswahl */}
-      <div className="mb-4">
-        <Label className="text-sm font-semibold text-foreground mb-2 block">
+      <div className="mb-3">
+        <Label className="text-xs md:text-sm font-semibold text-foreground mb-1.5 md:mb-2 block">
           {t("notifications.selectDays")}
         </Label>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 md:gap-2">
           {daysOfWeek.map((day) => (
-            <div key={day.key} className="flex items-center space-x-2 p-2 rounded-lg border border-border hover:bg-gray-50">
+            <div key={day.key} className="flex items-center space-x-1.5 md:space-x-2 p-1.5 md:p-2 rounded-md md:rounded-lg border border-border hover:bg-gray-50">
               <CheckboxUI
                 id={`day-${day.key}`}
                 checked={settings.selectedDays.includes(day.key)}
@@ -291,7 +305,7 @@ export default function JobNotifications({ filters }: JobNotificationsProps) {
               />
               <Label
                 htmlFor={`day-${day.key}`}
-                className="text-sm font-medium cursor-pointer flex-1"
+                className="text-xs md:text-sm font-medium cursor-pointer flex-1"
               >
                 {day.label}
               </Label>
@@ -301,8 +315,8 @@ export default function JobNotifications({ filters }: JobNotificationsProps) {
       </div>
 
       {/* Uhrzeit-Auswahl */}
-      <div className="mb-4">
-        <Label htmlFor="notification-time" className="text-sm font-semibold text-foreground mb-2 block">
+      <div className="mb-3">
+        <Label htmlFor="notification-time" className="text-xs md:text-sm font-semibold text-foreground mb-1.5 md:mb-2 block">
           {t("notifications.selectTime")}
         </Label>
         <Input
@@ -310,42 +324,42 @@ export default function JobNotifications({ filters }: JobNotificationsProps) {
           type="time"
           value={settings.notificationTime}
           onChange={(e) => handleTimeChange(e.target.value)}
-          className="w-full"
+          className="w-full text-xs md:text-sm"
         />
       </div>
     </>
   )
 
   return (
-    <div className="bg-white rounded-[2rem] p-6 md:p-8 shadow-xl mb-6 border-2 border-border">
-      <div className="flex items-center gap-3 mb-4">
-        <Bell className="w-5 h-5 text-primary" />
-        <h3 className="text-xl md:text-2xl font-bold text-foreground">{t("notifications.title")}</h3>
+    <div className="bg-white rounded-xl md:rounded-2xl p-4 md:p-6 shadow-xl mb-4 md:mb-6 border-2 border-border">
+      <div className="flex items-center gap-2 md:gap-3 mb-3 md:mb-4">
+        <Bell className="w-4 h-4 md:w-5 md:h-5 text-primary" />
+        <h3 className="text-lg md:text-xl font-bold text-foreground">{t("notifications.title")}</h3>
       </div>
 
-      <p className="text-sm text-muted-foreground mb-6">{t("notifications.description")}</p>
+      <p className="text-xs md:text-sm text-muted-foreground mb-4 md:mb-5">{t("notifications.description")}</p>
 
       {settings.enabled ? (
         // Anzeige aktiver Einstellungen
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 text-sm text-primary font-semibold">
-            <Check className="w-4 h-4" />
+        <div className="space-y-3 md:space-y-4">
+          <div className="flex items-center gap-1.5 md:gap-2 text-xs md:text-sm text-primary font-semibold">
+            <Check className="w-3.5 h-3.5 md:w-4 md:h-4" />
             <span>{t("notifications.active")}</span>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-2.5 md:space-y-3">
             {renderCommonSections()}
 
             {/* Versandart */}
             <div>
-              <Label className="text-sm font-semibold text-foreground mb-2 block">
+              <Label className="text-xs md:text-sm font-semibold text-foreground mb-1.5 md:mb-2 block">
                 {t("notifications.deliveryMethod")}
               </Label>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 rounded-xl border border-border">
-                  <div className="flex items-center gap-3">
-                    <Mail className="w-5 h-5 text-primary" />
-                    <span className="text-sm font-medium">{t("notifications.email")}</span>
+              <div className="space-y-2.5 md:space-y-3">
+                <div className="flex items-center justify-between p-2.5 md:p-3 rounded-lg md:rounded-xl border border-border">
+                  <div className="flex items-center gap-2 md:gap-3">
+                    <Mail className="w-4 h-4 md:w-5 md:h-5 text-primary" />
+                    <span className="text-xs md:text-sm font-medium">{t("notifications.email")}</span>
                   </div>
                   <Switch checked={settings.emailEnabled} onCheckedChange={handleEmailToggle} />
                 </div>
@@ -355,14 +369,14 @@ export default function JobNotifications({ filters }: JobNotificationsProps) {
                     placeholder={t("notifications.emailPlaceholder")}
                     value={settings.email}
                     onChange={(e) => handleEmailChange(e.target.value)}
-                    className="mt-2"
+                    className="mt-1.5 md:mt-2 text-xs md:text-sm"
                   />
                 )}
 
-                <div className="flex items-center justify-between p-3 rounded-xl border border-border">
-                  <div className="flex items-center gap-3">
-                    <MessageSquare className="w-5 h-5 text-primary" />
-                    <span className="text-sm font-medium">{t("notifications.whatsapp")}</span>
+                <div className="flex items-center justify-between p-2.5 md:p-3 rounded-lg md:rounded-xl border border-border">
+                  <div className="flex items-center gap-2 md:gap-3">
+                    <MessageSquare className="w-4 h-4 md:w-5 md:h-5 text-primary" />
+                    <span className="text-xs md:text-sm font-medium">{t("notifications.whatsapp")}</span>
                   </div>
                   <Switch checked={settings.whatsappEnabled} onCheckedChange={handleWhatsAppToggle} />
                 </div>
@@ -372,7 +386,7 @@ export default function JobNotifications({ filters }: JobNotificationsProps) {
                     placeholder={t("notifications.whatsappPlaceholder")}
                     value={settings.whatsapp}
                     onChange={(e) => handleWhatsAppChange(e.target.value)}
-                    className="mt-2"
+                    className="mt-1.5 md:mt-2 text-xs md:text-sm"
                   />
                 )}
               </div>
@@ -380,11 +394,12 @@ export default function JobNotifications({ filters }: JobNotificationsProps) {
 
             {/* Update Button wenn Filter sich geändert haben */}
             {(filtersChanged || settings.selectedDays.length === 0) && (
-              <div className="pt-2">
+              <div className="pt-1.5 md:pt-2">
                 <Button
                   onClick={handleUpdate}
                   disabled={settings.selectedDays.length === 0}
-                  className="w-full bg-primary hover:bg-primary/90 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                  size="sm"
+                  className="w-full bg-primary hover:bg-primary/90 text-white disabled:opacity-50 disabled:cursor-not-allowed text-xs md:text-sm py-2"
                 >
                   {t("notifications.update")}
                 </Button>
@@ -392,11 +407,12 @@ export default function JobNotifications({ filters }: JobNotificationsProps) {
             )}
 
             {/* Deaktivieren Button */}
-            <div className="pt-2 border-t border-border">
+            <div className="pt-1.5 md:pt-2 border-t border-border">
               <Button
                 onClick={handleDeactivate}
                 variant="outline"
-                className="w-full border-red-200 text-red-600 hover:bg-red-50"
+                size="sm"
+                className="w-full border-red-200 text-red-600 hover:bg-red-50 text-xs md:text-sm py-2"
               >
                 {t("notifications.deactivate")}
               </Button>
@@ -404,25 +420,25 @@ export default function JobNotifications({ filters }: JobNotificationsProps) {
           </div>
 
           {/* Datenschutz-Hinweis */}
-          <p className="text-xs text-muted-foreground mt-4 pt-4 border-t border-border">
+          <p className="text-xs text-muted-foreground mt-3 md:mt-4 pt-3 md:pt-4 border-t border-border">
             {t("notifications.privacy")}
           </p>
         </div>
       ) : (
         // Formular zum Aktivieren
-        <div className="space-y-4">
+        <div className="space-y-3 md:space-y-4">
           {renderCommonSections()}
 
           {/* Versandart */}
           <div>
-            <Label className="text-sm font-semibold text-foreground mb-2 block">
+            <Label className="text-xs md:text-sm font-semibold text-foreground mb-1.5 md:mb-2 block">
               {t("notifications.deliveryMethod")}
             </Label>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 rounded-xl border border-border">
-                <div className="flex items-center gap-3">
-                  <Mail className="w-5 h-5 text-primary" />
-                  <span className="text-sm font-medium">{t("notifications.email")}</span>
+            <div className="space-y-2.5 md:space-y-3">
+              <div className="flex items-center justify-between p-2.5 md:p-3 rounded-lg md:rounded-xl border border-border">
+                <div className="flex items-center gap-2 md:gap-3">
+                  <Mail className="w-4 h-4 md:w-5 md:h-5 text-primary" />
+                  <span className="text-xs md:text-sm font-medium">{t("notifications.email")}</span>
                 </div>
                 <Switch checked={settings.emailEnabled} onCheckedChange={handleEmailToggle} />
               </div>
@@ -432,14 +448,14 @@ export default function JobNotifications({ filters }: JobNotificationsProps) {
                   placeholder={t("notifications.emailPlaceholder")}
                   value={settings.email}
                   onChange={(e) => handleEmailChange(e.target.value)}
-                  className="mt-2"
+                  className="mt-1.5 md:mt-2 text-xs md:text-sm"
                 />
               )}
 
-              <div className="flex items-center justify-between p-3 rounded-xl border border-border">
-                <div className="flex items-center gap-3">
-                  <MessageSquare className="w-5 h-5 text-primary" />
-                  <span className="text-sm font-medium">{t("notifications.whatsapp")}</span>
+              <div className="flex items-center justify-between p-2.5 md:p-3 rounded-lg md:rounded-xl border border-border">
+                <div className="flex items-center gap-2 md:gap-3">
+                  <MessageSquare className="w-4 h-4 md:w-5 md:h-5 text-primary" />
+                  <span className="text-xs md:text-sm font-medium">{t("notifications.whatsapp")}</span>
                 </div>
                 <Switch checked={settings.whatsappEnabled} onCheckedChange={handleWhatsAppToggle} />
               </div>
@@ -449,7 +465,7 @@ export default function JobNotifications({ filters }: JobNotificationsProps) {
                   placeholder={t("notifications.whatsappPlaceholder")}
                   value={settings.whatsapp}
                   onChange={(e) => handleWhatsAppChange(e.target.value)}
-                  className="mt-2"
+                  className="mt-1.5 md:mt-2 text-xs md:text-sm"
                 />
               )}
             </div>
@@ -459,13 +475,14 @@ export default function JobNotifications({ filters }: JobNotificationsProps) {
           <Button
             onClick={handleActivate}
             disabled={(!settings.emailEnabled && !settings.whatsappEnabled) || settings.selectedDays.length === 0}
-            className="w-full bg-primary hover:bg-primary/90 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+            size="sm"
+            className="w-full bg-primary hover:bg-primary/90 text-white disabled:opacity-50 disabled:cursor-not-allowed text-xs md:text-sm py-2"
           >
             {t("notifications.activate")}
           </Button>
 
           {/* Datenschutz-Hinweis */}
-          <p className="text-xs text-muted-foreground mt-4 pt-4 border-t border-border">
+          <p className="text-xs text-muted-foreground mt-3 md:mt-4 pt-3 md:pt-4 border-t border-border">
             {t("notifications.privacy")}
           </p>
         </div>
