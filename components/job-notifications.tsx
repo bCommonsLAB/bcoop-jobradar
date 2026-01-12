@@ -331,7 +331,7 @@ export default function JobNotifications({ filters: propsFilters }: JobNotificat
   )
 
   return (
-    <div className="bg-white rounded-xl md:rounded-2xl p-4 md:p-6 shadow-xl mb-4 md:mb-6 border-2 border-border">
+    <div className="bg-card rounded-xl md:rounded-2xl p-4 md:p-6 shadow-xl mb-4 md:mb-6 border-2 border-border">
       <div className="flex items-center gap-2 md:gap-3 mb-3 md:mb-4">
         <Bell className="w-4 h-4 md:w-5 md:h-5 text-primary" />
         <h3 className="text-lg md:text-xl font-bold text-foreground">{t("notifications.title")}</h3>

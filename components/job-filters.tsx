@@ -12,16 +12,21 @@ import {
   UtensilsCrossed,
   Mountain,
   MapPin,
+  Calendar,
   Search,
   Briefcase,
   X,
   GraduationCap,
+  AlertCircle,
 } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { useTranslation } from "@/hooks/use-translation"
+import { useToast } from "@/hooks/use-toast"
+import { iconSizes } from "@/lib/icon-sizes"
+import { cn } from "@/lib/utils"
 
 interface JobFiltersProps {
   onSubmit: (filters: { jobTypes: string[]; timeframe: string; locations: string[]; noQualificationRequired: boolean }) => void
@@ -45,6 +50,7 @@ export default function JobFilters({
   title
 }: JobFiltersProps) {
   const { t } = useTranslation()
+  const { toast } = useToast()
   const [jobTypes, setJobTypes] = useState<string[]>(initialFilters?.jobTypes || [])
   const [timeframe, setTimeframe] = useState<string>(initialFilters?.timeframe || "all")
   const [locations, setLocations] = useState<string[]>(initialFilters?.locations || [])
@@ -52,6 +58,11 @@ export default function JobFilters({
   const [isJobSelectorOpen, setIsJobSelectorOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [customJobs, setCustomJobs] = useState<CustomJob[]>([])
+  const [showJobTypeError, setShowJobTypeError] = useState(false)
+  const [showLocationError, setShowLocationError] = useState(false)
+  
+  // Job-Typen die keine Ausbildung benötigen
+  const noQualificationJobTypes = ["dishwasher", "helper", "housekeeping"]
 
   // Update state when initialFilters change
   useEffect(() => {
@@ -119,17 +130,92 @@ export default function JobFilters({
   }
 
   const handleSubmit = () => {
-    onSubmit({ jobTypes, timeframe, locations, noQualificationRequired })
+    // Prüfen, welche Kategorien fehlen
+    const hasJobTypes = jobTypes.length > 0
+    const hasLocations = locations.length > 0
+    
+    // Fehlermeldungen setzen
+    setShowJobTypeError(!hasJobTypes)
+    setShowLocationError(!hasLocations)
+    
+    // Nur submitten, wenn alle Kategorien ausgefüllt sind
+    if (hasJobTypes && hasLocations) {
+      onSubmit({ jobTypes, timeframe, locations, noQualificationRequired })
+    }
   }
 
   const handleQualificationToggle = (checked: boolean) => {
     setNoQualificationRequired(checked)
+    
+    // Option D: Automatische Vorauswahl + Toast
+    if (checked) {
+      // Prüfe ob bereits Job-Typen ausgewählt sind
+      const hasSelectedJobTypes = jobTypes.length > 0 && !jobTypes.includes("all")
+      
+      if (!hasSelectedJobTypes) {
+        // Automatisch passende Jobs vorauswählen
+        const newJobTypes = noQualificationJobTypes
+        setJobTypes(newJobTypes)
+        
+        // Toast-Benachrichtigung
+        toast({
+          title: t("filters.autoSelectTitle") || "Passende Jobs vorausgewählt",
+          description: t("filters.autoSelectDescription") || "Wir haben passende Jobs für dich vorausgewählt. Du kannst jederzeit alle Jobs anzeigen.",
+          action: (
+            <button
+              onClick={() => {
+                setJobTypes(["all"])
+                toast({
+                  title: t("filters.allJobsShown") || "Alle Jobs angezeigt",
+                  description: t("filters.allJobsShownDescription") || "Alle verfügbaren Jobs werden jetzt angezeigt.",
+                })
+                if (autoApply) {
+                  onSubmit({ jobTypes: ["all"], timeframe, locations, noQualificationRequired: checked })
+                }
+              }}
+              className="text-xs font-semibold text-primary hover:underline"
+            >
+              {t("filters.showAllJobs") || "Alle anzeigen"}
+            </button>
+          ),
+        })
+        
+        if (autoApply) {
+          onSubmit({ jobTypes: newJobTypes, timeframe, locations, noQualificationRequired: checked })
+        }
+      } else {
+        // Benutzer hat bereits Jobs ausgewählt - nur Toast ohne Änderung
+        toast({
+          title: t("filters.qualificationFilterActive") || "Filter aktiviert",
+          description: t("filters.qualificationFilterDescription") || "Es werden nur Jobs ohne Qualifikationsanforderungen angezeigt.",
+        })
+        
+        if (autoApply) {
+          onSubmit({ jobTypes, timeframe, locations, noQualificationRequired: checked })
+        }
+      }
+    } else {
+      // Toggle deaktiviert - normale Logik
+      if (autoApply) {
+        onSubmit({ jobTypes, timeframe, locations, noQualificationRequired: false })
+      }
+    }
+  }
+  
+  const handleShowAllJobs = () => {
+    setJobTypes(["all"])
+    toast({
+      title: t("filters.allJobsShown") || "Alle Jobs angezeigt",
+      description: t("filters.allJobsShownDescription") || "Alle verfügbaren Jobs werden jetzt angezeigt.",
+    })
     if (autoApply) {
-      onSubmit({ jobTypes, timeframe, locations, noQualificationRequired: checked })
+      onSubmit({ jobTypes: ["all"], timeframe, locations, noQualificationRequired })
     }
   }
 
   const handleJobTypeToggle = (value: string) => {
+    // Fehlermeldung zurücksetzen, wenn eine Auswahl getroffen wird
+    setShowJobTypeError(false)
     let newJobTypes: string[]
     
     if (value === "all") {
@@ -151,6 +237,8 @@ export default function JobFilters({
   }
 
   const handleLocationToggle = (value: string) => {
+    // Fehlermeldung zurücksetzen, wenn eine Auswahl getroffen wird
+    setShowLocationError(false)
     let newLocations: string[]
     
     if (value === "all") {
@@ -180,6 +268,15 @@ export default function JobFilters({
     }
   }
 
+  // Validierungsfunktion: Prüft ob alle Kategorien mindestens eine Auswahl haben
+  const isFormValid = () => {
+    const hasJobTypes = jobTypes.length > 0
+    const hasLocations = locations.length > 0
+    const hasTimeframe = timeframe !== "" && timeframe !== undefined
+    
+    return hasJobTypes && hasLocations && hasTimeframe
+  }
+
   const jobTypeOptions = [
     { value: "all", label: t("jobTypes.all"), icon: Sparkles },
     { value: "kitchen", label: t("jobTypes.kitchen"), icon: ChefHat },
@@ -191,9 +288,9 @@ export default function JobFilters({
 
   const locationOptions = [
     { value: "all", label: t("locations.all"), icon: MapPin },
+    { value: "bressanone", label: t("locations.bressanone"), icon: Mountain },
     { value: "bolzano", label: t("locations.bolzano"), icon: Mountain },
     { value: "merano", label: t("locations.merano"), icon: Mountain },
-    { value: "bressanone", label: t("locations.bressanone"), icon: Mountain },
     { value: "brunico", label: t("locations.brunico"), icon: Mountain },
     { value: "vipiteno", label: t("locations.vipiteno"), icon: Mountain },
     { value: "val-pusteria", label: t("locations.valPusteria"), icon: Mountain },
@@ -201,14 +298,49 @@ export default function JobFilters({
   ]
 
   return (
-    <div className="bg-white rounded-xl md:rounded-3xl p-2 md:p-6 shadow-lg space-y-3 md:space-y-6">
-      {title && (
-        <div className="pb-2 md:pb-4 border-b border-border/50">
-          <h2 className="text-lg md:text-3xl lg:text-4xl font-bold text-foreground leading-tight tracking-tight">
+    <div className="bg-card rounded-lg md:rounded-3xl p-2 md:p-6 shadow-lg space-y-1.5 md:space-y-4">
+      <div className={`${title ? "pb-2 md:pb-3 border-b border-border/50" : "pb-2"} flex items-center ${title ? "justify-between" : "justify-end"}`}>
+        {title && (
+          <h2 className="text-base md:text-3xl lg:text-4xl font-bold text-foreground leading-tight tracking-tight">
             {title}
           </h2>
+        )}
+        {/* Qualification Toggle - oben rechts */}
+        <div 
+          className={cn(
+            "flex items-center gap-1.5 md:gap-2 px-2 md:px-3 py-1 md:py-1.5 rounded-lg md:rounded-xl border-2 transition-all duration-200",
+            noQualificationRequired
+              ? "bg-gradient-to-br from-primary/20 to-cyan-50 border-primary shadow-md scale-105"
+              : "bg-card border-border/50 hover:border-primary/50"
+          )}
+          role="group"
+          aria-label="Qualifikationsfilter"
+        >
+          <GraduationCap className={cn(iconSizes.sm, noQualificationRequired ? "text-primary" : "text-muted-foreground")} aria-hidden="true" />
+          <Label 
+            htmlFor="qualification-toggle" 
+            className={cn(
+              "text-[10px] md:text-xs font-medium cursor-pointer whitespace-nowrap",
+              noQualificationRequired ? "text-primary font-semibold" : "text-muted-foreground"
+            )}
+          >
+            {t("filters.noQualificationRequired")}
+          </Label>
+          <Switch
+            id="qualification-toggle"
+            checked={noQualificationRequired}
+            onCheckedChange={handleQualificationToggle}
+            className="scale-75 md:scale-100"
+            aria-label={t("filters.noQualificationRequired")}
+            aria-describedby="qualification-toggle-description"
+          />
+          {noQualificationRequired && (
+            <span className="sr-only" id="qualification-toggle-description">
+              Filtert Jobs ohne Qualifikationsanforderungen. Relevante Jobs werden automatisch ausgewählt.
+            </span>
+          )}
         </div>
-      )}
+      </div>
       <Dialog open={isJobSelectorOpen} onOpenChange={setIsJobSelectorOpen}>
         <DialogContent className="sm:max-w-[600px] max-h-[80vh] rounded-[2rem] p-0 overflow-hidden">
           <DialogHeader className="p-6 border-b border-border">
@@ -230,7 +362,7 @@ export default function JobFilters({
                 <button
                   key={job.id}
                   onClick={() => handleJobSelect(job)}
-                  className="w-full text-left p-5 rounded-[1.25rem] border-2 border-border/50 bg-white hover:border-primary hover:shadow-lg transition-all hover:scale-[1.02] space-y-2"
+                  className="w-full text-left p-5 rounded-[1.25rem] border-2 border-border/50 bg-card hover:border-primary hover:shadow-lg transition-all hover:scale-[1.02] space-y-2"
                 >
                   <div className="font-bold text-lg text-foreground">{job.title}</div>
                   <div className="text-sm text-muted-foreground">{job.company}</div>
@@ -252,26 +384,27 @@ export default function JobFilters({
         </DialogContent>
       </Dialog>
 
-      {/* Job Type */}
-      <div className="space-y-2 md:space-y-3">
-        <label className="block text-base md:text-xl font-bold text-foreground">{t("filters.jobType")}</label>
-        
-        {/* Qualification */}
-        <div className="flex items-center justify-between p-2 md:p-3 rounded-lg md:rounded-xl border border-border/50 bg-gradient-to-br from-white to-gray-50/50">
-          <div className="flex items-center gap-1.5 md:gap-2.5">
-            <GraduationCap className="w-3.5 h-3.5 md:w-5 md:h-5 text-primary" />
-            <Label htmlFor="qualification-toggle" className="text-xs md:text-base font-medium text-foreground cursor-pointer">
-              {t("filters.noQualificationRequired")}
-            </Label>
+      {/* Job Type - Verbesserte Gruppierung */}
+      <div className="space-y-3 md:space-y-4 p-4 md:p-6 rounded-lg md:rounded-xl border border-border/50 bg-muted/30">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <ChefHat className="w-3 h-3 md:w-4 md:h-4 text-primary" />
+            <div>
+              <h3 className="text-base md:text-lg font-bold text-foreground">{t("filters.jobType")}</h3>
+              <p className="text-xs text-muted-foreground hidden md:block">Wähle deinen Arbeitsbereich</p>
+            </div>
           </div>
-          <Switch
-            id="qualification-toggle"
-            checked={noQualificationRequired}
-            onCheckedChange={handleQualificationToggle}
-          />
+          {noQualificationRequired && jobTypes.length > 0 && !jobTypes.includes("all") && jobTypes.every(jt => noQualificationJobTypes.includes(jt)) && (
+            <button
+              onClick={handleShowAllJobs}
+              className="text-xs font-semibold text-primary hover:underline flex items-center gap-1"
+              aria-label="Alle Jobs anzeigen"
+            >
+              {t("filters.showAllJobs") || "Alle anzeigen"}
+            </button>
+          )}
         </div>
-
-        <div className="grid grid-cols-2 gap-1.5 md:gap-3">
+        <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-1 md:gap-2">
           {jobTypeOptions.map((type) => {
             const Icon = type.icon
             const isSelected = jobTypes.includes(type.value)
@@ -279,14 +412,17 @@ export default function JobFilters({
               <button
                 key={type.value}
                 onClick={() => handleJobTypeToggle(type.value)}
-                className={`py-2 md:py-3 px-2 md:px-3.5 rounded-lg md:rounded-xl text-[11px] md:text-sm font-bold transition-all duration-200 border-2 flex flex-col items-center gap-1 md:gap-2 ${
+                className={cn(
+                  "py-1 md:py-2 px-1 md:px-2 rounded-md md:rounded-lg text-[9px] md:text-xs font-bold transition-all duration-200 border-2 flex flex-col items-center gap-0.5 md:gap-1 touch-manipulation min-h-[44px]",
                   isSelected
-                    ? "bg-gradient-to-br from-primary to-cyan-600 text-white border-primary shadow-lg scale-[1.02] ring-1 ring-primary/30"
-                    : "bg-gradient-to-br from-white to-gray-50 text-foreground border-border/50 hover:border-primary/50 hover:shadow-md hover:scale-[1.02]"
-                }`}
+                    ? "bg-gradient-to-br from-primary to-cyan-600 text-white border-primary shadow-md scale-[1.02] ring-1 ring-primary/30"
+                    : "bg-gradient-to-br from-white to-gray-50 dark:from-[#2c2c2c] dark:to-[#2c2c2c] text-foreground border-border/50 dark:border-[#3c3c3c] hover:border-primary/50 dark:hover:bg-[#2c2c2c] hover:shadow-sm hover:scale-[1.02] active:scale-95"
+                )}
+                aria-label={`${type.label} ${isSelected ? "ausgewählt" : "auswählen"}`}
+                aria-pressed={isSelected}
               >
-                <Icon className={`w-3.5 h-3.5 md:w-5 md:h-5 ${isSelected ? "text-white" : "text-primary"}`} />
-                {type.label}
+                <Icon className={cn("w-3 h-3 md:w-4 md:h-4", isSelected ? "text-white" : "text-primary")} aria-hidden="true" />
+                <span className="text-center leading-tight">{type.label}</span>
               </button>
             )
           })}
@@ -296,14 +432,14 @@ export default function JobFilters({
               <div
                 key={job.value}
                 onClick={() => handleJobTypeToggle(job.value)}
-                className={`py-2 md:py-3 px-2 md:px-3.5 rounded-lg md:rounded-xl text-[11px] md:text-sm font-bold transition-all duration-200 border-2 flex flex-col items-center gap-1 md:gap-2 relative cursor-pointer ${
+                className={`py-1.5 md:py-2 px-1 md:px-2 rounded-md md:rounded-lg text-[10px] md:text-xs font-bold transition-all duration-200 border-2 flex flex-col items-center gap-0.5 md:gap-1 relative cursor-pointer ${
                   isSelected
-                    ? "bg-gradient-to-br from-primary to-cyan-600 text-white border-primary shadow-lg scale-[1.02] ring-1 ring-primary/30"
-                    : "bg-gradient-to-br from-white to-gray-50 text-foreground border-border/50 hover:border-primary/50 hover:shadow-md hover:scale-[1.02]"
+                    ? "bg-gradient-to-br from-primary to-cyan-600 text-white border-primary shadow-md scale-[1.02] ring-1 ring-primary/30"
+                    : "bg-gradient-to-br from-white to-gray-50 text-foreground border-border/50 hover:border-primary/50 hover:shadow-sm hover:scale-[1.02]"
                 }`}
               >
-                <Briefcase className={`w-3.5 h-3.5 md:w-5 md:h-5 ${isSelected ? "text-white" : "text-primary"}`} />
-                <span className="text-xs leading-tight">{job.title}</span>
+                <Briefcase className={cn(iconSizes.sm, isSelected ? "text-white" : "text-primary")} />
+                <span className="text-center leading-tight line-clamp-2">{job.title}</span>
                 {/* Remove button */}
                 <button
                   onClick={(e) => {
@@ -312,7 +448,7 @@ export default function JobFilters({
                   }}
                   className={`absolute -top-1.5 -right-1.5 w-6 h-6 md:w-7 md:h-7 rounded-full flex items-center justify-center transition-all ${
                     isSelected
-                      ? "bg-white text-primary hover:bg-gray-100"
+                      ? "bg-card text-primary hover:bg-accent"
                       : "bg-red-500 text-white hover:bg-red-600"
                   }`}
                 >
@@ -324,17 +460,29 @@ export default function JobFilters({
         </div>
         <button
           onClick={() => setIsJobSelectorOpen(true)}
-          className="w-full py-2 md:py-3 px-2 md:px-4 rounded-lg md:rounded-xl text-[11px] md:text-sm font-semibold transition-all duration-200 border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-cyan-50 text-primary hover:border-primary hover:shadow-md hover:scale-[1.02] flex items-center justify-center gap-1.5"
+          className="w-full py-1.5 md:py-2 px-2 md:px-3 rounded-md md:rounded-lg text-[10px] md:text-xs font-semibold transition-all duration-200 border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-cyan-50 text-primary hover:border-primary hover:shadow-sm hover:scale-[1.02] flex items-center justify-center gap-1"
         >
-          <Search className="w-3 h-3 md:w-4 md:h-4" />
+          <Search className="w-3 h-3 md:w-3.5 md:h-3.5" />
           Altri lavori
         </button>
+        {showJobTypeError && (
+          <div className="mt-2 text-sm text-destructive flex items-center gap-1">
+            <AlertCircle className="w-3 h-3 md:w-4 md:h-4" />
+            <span>{t("filters.pleaseSelectFilter")}</span>
+          </div>
+        )}
       </div>
 
-      {/* Timeframe */}
-      <div className="space-y-2 md:space-y-3">
-        <label className="block text-base md:text-xl font-bold text-foreground">{t("filters.period")}</label>
-        <div className="grid grid-cols-3 gap-1.5 md:gap-3">
+      {/* Timeframe - Verbesserte Gruppierung */}
+      <div className="space-y-3 md:space-y-4 p-4 md:p-6 rounded-lg md:rounded-xl border border-border/50 bg-muted/30">
+        <div className="flex items-center gap-2 mb-3">
+          <Calendar className="w-3 h-3 md:w-4 md:h-4 text-primary" />
+          <div>
+            <h3 className="text-base md:text-lg font-bold text-foreground">{t("filters.period")}</h3>
+            <p className="text-xs text-muted-foreground hidden md:block">Wann wurde der Job veröffentlicht?</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-3 gap-1 md:gap-2">
           {[
             { value: "all", label: t("timeframes.all") },
             { value: "week", label: t("timeframes.week") },
@@ -343,11 +491,14 @@ export default function JobFilters({
             <button
               key={time.value}
               onClick={() => handleFilterChange("timeframe", time.value)}
-              className={`py-2 md:py-3 px-2 md:px-3.5 rounded-lg md:rounded-xl text-[11px] md:text-sm font-bold transition-all duration-200 border-2 ${
+              className={cn(
+                "py-1.5 md:py-2 px-1 md:px-2 rounded-md md:rounded-lg text-[10px] md:text-xs font-bold transition-all duration-200 border-2 touch-manipulation min-h-[44px]",
                 timeframe === time.value
-                  ? "bg-gradient-to-br from-primary to-cyan-600 text-white border-primary shadow-lg scale-[1.02] ring-1 ring-primary/30"
-                  : "bg-gradient-to-br from-white to-gray-50 text-foreground border-border/50 hover:border-primary/50 hover:shadow-md hover:scale-[1.02]"
-              }`}
+                  ? "bg-gradient-to-br from-primary to-cyan-600 text-white border-primary shadow-md scale-[1.02] ring-1 ring-primary/30"
+                  : "bg-gradient-to-br from-white to-gray-50 text-foreground border-border/50 hover:border-primary/50 hover:shadow-sm hover:scale-[1.02] active:scale-95"
+              )}
+              aria-label={`${time.label} ${timeframe === time.value ? "ausgewählt" : "auswählen"}`}
+              aria-pressed={timeframe === time.value}
             >
               {time.label}
             </button>
@@ -355,10 +506,16 @@ export default function JobFilters({
         </div>
       </div>
 
-      {/* Location */}
-      <div className="space-y-2 md:space-y-3">
-        <label className="block text-base md:text-xl font-bold text-foreground">{t("filters.location")}</label>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-1.5 md:gap-3">
+      {/* Location - Verbesserte Gruppierung */}
+      <div className="space-y-3 md:space-y-4 p-4 md:p-6 rounded-xl border border-border/50 bg-muted/30">
+        <div className="flex items-center gap-2 mb-3">
+          <MapPin className={`${iconSizes.md} text-primary`} />
+          <div>
+            <h3 className="text-base md:text-lg font-bold text-foreground">{t("filters.location")}</h3>
+            <p className="text-xs text-muted-foreground hidden md:block">Wo möchtest du arbeiten?</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-1 md:gap-2">
           {locationOptions.map((loc) => {
             const Icon = loc.icon
             const isSelected = locations.includes(loc.value)
@@ -366,28 +523,43 @@ export default function JobFilters({
               <button
                 key={loc.value}
                 onClick={() => handleLocationToggle(loc.value)}
-                className={`py-2 md:py-3 px-2 md:px-3.5 rounded-lg md:rounded-xl text-[11px] md:text-sm font-bold transition-all duration-200 border-2 flex flex-col items-center gap-1 md:gap-2 ${
+                className={cn(
+                  "py-1 md:py-2 px-1 md:px-2 rounded-md md:rounded-lg text-[9px] md:text-xs font-bold transition-all duration-200 border-2 flex flex-col items-center gap-0.5 md:gap-1 touch-manipulation min-h-[44px]",
                   isSelected
-                    ? "bg-gradient-to-br from-primary to-cyan-600 text-white border-primary shadow-lg scale-[1.02] ring-1 ring-primary/30"
-                    : "bg-gradient-to-br from-white to-gray-50 text-foreground border-border/50 hover:border-primary/50 hover:shadow-md hover:scale-[1.02]"
-                }`}
+                    ? "bg-gradient-to-br from-primary to-cyan-600 text-white border-primary shadow-md scale-[1.02] ring-1 ring-primary/30"
+                    : "bg-gradient-to-br from-white to-gray-50 dark:from-[#2c2c2c] dark:to-[#2c2c2c] text-foreground border-border/50 dark:border-[#3c3c3c] hover:border-primary/50 dark:hover:bg-[#2c2c2c] hover:shadow-sm hover:scale-[1.02] active:scale-95"
+                )}
+                aria-label={`${loc.label} ${isSelected ? "ausgewählt" : "auswählen"}`}
+                aria-pressed={isSelected}
               >
-                <Icon className={`w-3.5 h-3.5 md:w-5 md:h-5 ${isSelected ? "text-white" : "text-primary"}`} />
-                {loc.label}
+                <Icon className={cn("w-3 h-3 md:w-4 md:h-4", isSelected ? "text-white" : "text-primary")} aria-hidden="true" />
+                <span className="text-center leading-tight">{loc.label}</span>
               </button>
             )
           })}
         </div>
+        {showLocationError && (
+          <div className="mt-2 text-sm text-destructive flex items-center gap-1">
+            <AlertCircle className="w-3 h-3 md:w-4 md:h-4" />
+            <span>{t("filters.pleaseSelectFilter")}</span>
+          </div>
+        )}
       </div>
 
       {showSubmitButton && (
         <Button
           onClick={handleSubmit}
+          disabled={!isFormValid()}
           size="lg"
-          className="w-full py-2.5 md:py-4 text-sm md:text-lg font-bold shadow-lg gap-1.5 rounded-lg md:rounded-xl bg-gradient-to-r from-primary via-primary/90 to-cyan-600 hover:from-primary/90 hover:via-primary/80 hover:to-cyan-600/90 transition-all duration-200 hover:scale-[1.02] hover:shadow-xl hover:glow-primary"
+          className={cn(
+            "w-full py-2 md:py-4 text-xs md:text-lg font-bold shadow-lg gap-1.5 rounded-lg md:rounded-xl transition-all duration-200",
+            isFormValid()
+              ? "bg-gradient-to-r from-primary via-primary/90 to-cyan-600 hover:from-primary/90 hover:via-primary/80 hover:to-cyan-600/90 hover:scale-[1.02] hover:shadow-xl hover:glow-primary"
+              : "bg-muted text-muted-foreground cursor-not-allowed opacity-50"
+          )}
         >
           {t("filters.continueToOffers")}
-          <ArrowRight className="w-3.5 h-3.5 md:w-5 md:h-5" />
+          <ArrowRight className="w-3 h-3 md:w-5 md:h-5" />
         </Button>
       )}
     </div>

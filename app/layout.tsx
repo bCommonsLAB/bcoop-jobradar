@@ -3,10 +3,15 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { LanguageProvider } from "@/components/language-provider"
+import { Toaster } from "@/components/ui/toaster"
 import "./globals.css"
 
 // Using Inter for better readability at all sizes
-const inter = Inter({ subsets: ["latin"], weight: ["400", "600", "700"] })
+const inter = Inter({ 
+  subsets: ["latin"], 
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-inter"
+})
 
 export const metadata: Metadata = {
   title: "Job*Radar - Arbeit finden in Südtirol",
@@ -46,6 +51,7 @@ export default function RootLayout({
     <html lang="de">
       <body className={`${inter.className} antialiased`}>
         <LanguageProvider>{children}</LanguageProvider>
+        <Toaster />
         <Analytics />
       </body>
     </html>

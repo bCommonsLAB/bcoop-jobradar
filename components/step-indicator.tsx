@@ -1,86 +1,210 @@
 "use client"
 
-import { Search, Eye } from "lucide-react"
+import { Search, Eye, Check } from "lucide-react"
 import { useTranslation } from "@/hooks/use-translation"
 
 interface StepIndicatorProps {
   currentStep: 1 | 2
+  onStepClick?: (step: number) => void
 }
 
-export default function StepIndicator({ currentStep }: StepIndicatorProps) {
+export default function StepIndicator({ currentStep, onStepClick }: StepIndicatorProps) {
   const { t } = useTranslation()
   const steps = [
-    { number: 1, label: t("stepIndicator.filters"), icon: Search },
-    { number: 2, label: t("stepIndicator.offers"), icon: Eye },
+    { number: 1, label: t("stepIndicator.filters"), icon: Search, unicode: "①" },
+    { number: 2, label: t("stepIndicator.offers"), icon: Eye, unicode: "②" },
   ]
 
   return (
-    <div className="bg-card border-2 border-border rounded-lg md:rounded-2xl p-2 md:p-6 shadow-md mb-3 md:mb-6 max-w-2xl mx-auto transition-all duration-300">
-      <div className="flex items-center justify-center gap-2 md:gap-4">
-        {steps.map((step, index) => (
-          <div key={step.number} className="flex items-center">
-            {/* Step Circle */}
-            <div className="flex flex-col items-center flex-shrink-0">
-              <div
-                className={`w-10 h-10 md:w-16 md:h-16 lg:w-20 lg:h-20 rounded-lg md:rounded-2xl flex items-center justify-center transition-all duration-300 relative ${
-                  currentStep === step.number
-                    ? "bg-gradient-to-br from-teal-500 via-teal-600 to-cyan-600 text-white shadow-lg scale-110 ring-2 ring-teal-200 animate-pulse glow-teal"
-                    : currentStep > step.number
-                      ? "bg-gradient-to-br from-teal-400 to-teal-500 text-white shadow-lg"
-                      : "bg-gray-100 text-muted-foreground border-2 border-border"
+    <div className="backdrop-blur-md bg-white/80 border-2 border-border/50 rounded-lg md:rounded-3xl p-2 md:p-4 lg:p-8 shadow-xl mb-3 md:mb-6 max-w-3xl mx-auto transition-all duration-300 hover:shadow-2xl">
+      {/* Mobile: Desktop-ähnliches Design */}
+      <div className="md:hidden flex items-center justify-center gap-1 md:gap-2">
+        {steps.map((step, index) => {
+          const isActive = currentStep === step.number
+          const isCompleted = currentStep > step.number
+          const isPending = currentStep < step.number
+          
+          return (
+            <div key={step.number} className="flex items-center">
+              {/* Step Card */}
+              <div 
+                className={`flex flex-col items-center flex-shrink-0 group ${
+                  step.number === 1 && currentStep === 2 && onStepClick ? "cursor-pointer" : ""
                 }`}
+                onClick={() => {
+                  if (step.number === 1 && currentStep === 2 && onStepClick) {
+                    onStepClick(1)
+                  }
+                }}
               >
-                {/* Mobile: Show number and icon together */}
-                <div className="md:hidden flex flex-col items-center justify-center relative w-full h-full gap-0.5">
-                  <step.icon
-                    className={`w-3.5 h-3.5 transition-transform duration-300 ${
-                      currentStep === step.number || currentStep > step.number
-                        ? "text-white"
+                <div
+                  className={`w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center transition-all duration-500 relative ${
+                    isActive
+                      ? "bg-gradient-to-br from-teal-500 via-teal-600 to-cyan-600 text-white shadow-2xl scale-110 ring-4 ring-teal-200/50 glow-teal hover:scale-115 hover:shadow-2xl"
+                      : isCompleted
+                        ? "bg-gradient-to-br from-teal-400 to-teal-500 text-white shadow-xl scale-105 hover:scale-110 hover:shadow-2xl"
+                        : step.number === 1 && currentStep === 2 && onStepClick
+                          ? "bg-gradient-to-br from-gray-100 to-gray-200 text-muted-foreground border-2 border-border shadow-md hover:scale-110 hover:shadow-xl hover:bg-gray-200/80 cursor-pointer ring-2 ring-teal-300/30 hover:ring-teal-400/50"
+                          : "bg-gradient-to-br from-gray-100 to-gray-200 text-muted-foreground border-2 border-border shadow-md hover:scale-105 hover:shadow-lg hover:bg-gray-200/80"
+                  }`}
+                >
+                  {/* Show icon or checkmark */}
+                  {isCompleted ? (
+                    <Check 
+                      className="w-5 h-5 md:w-6 md:h-6 text-white animate-in fade-in zoom-in duration-300" 
+                      strokeWidth={3} 
+                    />
+                  ) : (
+                    <step.icon
+                      className={`w-5 h-5 md:w-6 md:h-6 transition-all duration-300 ${
+                        isActive ? "text-white animate-pulse scale-110" : isPending ? "text-muted-foreground" : "text-white"
+                      } ${!isPending ? "group-hover:scale-110" : ""}`}
+                    />
+                  )}
+                  
+                  {/* Number Badge (only for active or pending) */}
+                  {!isCompleted && (
+                    <div className={`absolute -top-2 -right-2 w-4 h-4 md:w-5 md:h-5 rounded-full items-center justify-center shadow-lg border-2 border-white transition-all duration-300 flex ${
+                      isActive 
+                        ? "bg-gradient-to-br from-yellow-400 to-orange-400 scale-110" 
+                        : "bg-gradient-to-br from-yellow-400/80 to-orange-400/80 hover:scale-105"
+                    }`}>
+                      <span className={`text-[10px] md:text-xs font-bold ${
+                        isActive ? "text-gray-900" : "text-gray-800"
+                      }`}>
+                        {step.number}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Label */}
+                <span
+                  className={`text-[10px] md:text-xs font-bold mt-1.5 transition-all duration-300 text-center ${
+                    isActive 
+                      ? "text-foreground drop-shadow-sm" 
+                      : isCompleted
+                        ? "text-teal-600 font-semibold"
                         : "text-muted-foreground"
-                    } ${currentStep === step.number ? "animate-pulse" : ""}`}
-                  />
-                  <span className={`text-[10px] font-bold leading-none ${
-                    currentStep === step.number || currentStep > step.number
-                      ? "text-white"
-                      : "text-muted-foreground"
-                  }`}>
-                    {step.number}
-                  </span>
-                </div>
-                {/* Desktop: Show icon normally */}
-                <step.icon
-                  className={`hidden md:block w-7 md:w-7 lg:w-8 lg:h-8 transition-transform duration-300 ${
-                    currentStep === step.number || currentStep > step.number
-                      ? "text-white"
-                      : "text-muted-foreground"
-                  } ${currentStep === step.number ? "animate-pulse" : ""}`}
-                />
-                {/* Number Badge on Desktop */}
-                <div className="hidden md:flex absolute -top-1 -right-1 w-6 h-6 lg:w-7 lg:h-7 bg-yellow-400 rounded-full items-center justify-center shadow-md border-2 border-white">
-                  <span className="text-sm lg:text-base font-bold text-gray-900">
-                    {step.number}
-                  </span>
-                </div>
+                  } ${isActive ? "scale-105" : ""}`}
+                >
+                  {step.label}
+                </span>
               </div>
-              <span
-                className={`text-[10px] md:text-sm font-bold mt-1.5 md:mt-2.5 transition-colors duration-300 ${
-                  currentStep === step.number ? "text-foreground" : "text-muted-foreground"
-                }`}
-              >
-                {step.label}
-              </span>
-            </div>
 
-            {/* Line between steps */}
-            {index < steps.length - 1 && (
-              <div
-                className={`h-1 md:h-2 w-8 md:w-16 lg:w-20 mx-1.5 md:mx-3 rounded-full transition-all duration-300 ${
-                  currentStep > step.number ? "bg-gradient-to-r from-teal-500 to-teal-600 shadow-md" : "bg-border"
+              {/* Animated Progress Line */}
+              {index < steps.length - 1 && (
+                <div className="relative h-0.5 md:h-1 w-6 md:w-8 mx-1.5 rounded-full overflow-hidden bg-border">
+                  <div
+                    className={`absolute left-0 top-0 h-full rounded-full transition-all duration-500 ease-out ${
+                      isCompleted
+                        ? "w-full bg-gradient-to-r from-teal-500 via-teal-400 to-cyan-500 shadow-md glow-primary"
+                        : "w-0 bg-gradient-to-r from-teal-500 to-cyan-500"
+                    }`}
+                    style={{
+                      transitionDelay: isCompleted ? "200ms" : "0ms"
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Desktop: Altes kreisförmiges Design */}
+      <div className="hidden md:flex items-center justify-center gap-3 md:gap-6 lg:gap-8">
+        {steps.map((step, index) => {
+          const isActive = currentStep === step.number
+          const isCompleted = currentStep > step.number
+          const isPending = currentStep < step.number
+          
+          return (
+            <div key={step.number} className="flex items-center">
+              {/* Step Card */}
+              <div 
+                className={`flex flex-col items-center flex-shrink-0 group ${
+                  step.number === 1 && currentStep === 2 && onStepClick ? "cursor-pointer" : ""
                 }`}
-              />
-            )}
-          </div>
-        ))}
+                onClick={() => {
+                  if (step.number === 1 && currentStep === 2 && onStepClick) {
+                    onStepClick(1)
+                  }
+                }}
+              >
+                <div
+                  className={`w-14 h-14 md:w-20 md:h-20 lg:w-24 lg:h-24 rounded-xl md:rounded-2xl lg:rounded-3xl flex items-center justify-center transition-all duration-500 relative ${
+                    isActive
+                      ? "bg-gradient-to-br from-teal-500 via-teal-600 to-cyan-600 text-white shadow-2xl scale-110 ring-4 ring-teal-200/50 glow-teal hover:scale-115 hover:shadow-2xl"
+                      : isCompleted
+                        ? "bg-gradient-to-br from-teal-400 to-teal-500 text-white shadow-xl scale-105 hover:scale-110 hover:shadow-2xl"
+                        : step.number === 1 && currentStep === 2 && onStepClick
+                          ? "bg-gradient-to-br from-gray-100 to-gray-200 text-muted-foreground border-2 border-border shadow-md hover:scale-110 hover:shadow-xl hover:bg-gray-200/80 cursor-pointer ring-2 ring-teal-300/30 hover:ring-teal-400/50"
+                          : "bg-gradient-to-br from-gray-100 to-gray-200 text-muted-foreground border-2 border-border shadow-md hover:scale-105 hover:shadow-lg hover:bg-gray-200/80"
+                  }`}
+                >
+                  {/* Desktop: Show icon or checkmark */}
+                  {isCompleted ? (
+                    <Check 
+                      className="hidden md:block w-10 h-10 lg:w-12 lg:h-12 text-white animate-in fade-in zoom-in duration-300" 
+                      strokeWidth={3} 
+                    />
+                  ) : (
+                    <step.icon
+                      className={`hidden md:block w-8 h-8 lg:w-10 lg:h-10 transition-all duration-300 ${
+                        isActive ? "text-white animate-pulse scale-110" : isPending ? "text-muted-foreground" : "text-white"
+                      } ${!isPending ? "group-hover:scale-110" : ""}`}
+                    />
+                  )}
+                  
+                  {/* Number Badge on Desktop (only for active or pending) */}
+                  {!isCompleted && (
+                    <div className={`hidden md:flex absolute -top-2 -right-2 w-7 h-7 lg:w-8 lg:h-8 rounded-full items-center justify-center shadow-lg border-2 border-white transition-all duration-300 ${
+                      isActive 
+                        ? "bg-gradient-to-br from-yellow-400 to-orange-400 scale-110" 
+                        : "bg-gradient-to-br from-yellow-400/80 to-orange-400/80 hover:scale-105"
+                    }`}>
+                      <span className={`text-sm lg:text-base font-bold ${
+                        isActive ? "text-gray-900" : "text-gray-800"
+                      }`}>
+                        {step.number}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Label */}
+                <span
+                  className={`text-xs md:text-base lg:text-lg font-bold mt-2 md:mt-3 transition-all duration-300 text-center ${
+                    isActive 
+                      ? "text-foreground drop-shadow-sm" 
+                      : isCompleted
+                        ? "text-teal-600 font-semibold"
+                        : "text-muted-foreground"
+                  } ${isActive ? "scale-105" : ""}`}
+                >
+                  {step.label}
+                </span>
+              </div>
+
+              {/* Animated Progress Line */}
+              {index < steps.length - 1 && (
+                <div className="relative h-1.5 md:h-2 w-10 md:w-16 lg:w-24 mx-2 md:mx-4 lg:mx-6 rounded-full overflow-hidden bg-border">
+                  <div
+                    className={`absolute left-0 top-0 h-full rounded-full transition-all duration-500 ease-out ${
+                      isCompleted
+                        ? "w-full bg-gradient-to-r from-teal-500 via-teal-400 to-cyan-500 shadow-md glow-primary"
+                        : "w-0 bg-gradient-to-r from-teal-500 to-cyan-500"
+                    }`}
+                    style={{
+                      transitionDelay: isCompleted ? "200ms" : "0ms"
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+          )
+        })}
       </div>
     </div>
   )

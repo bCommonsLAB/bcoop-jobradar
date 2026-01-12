@@ -20,37 +20,38 @@ interface JobListProps {
 // Verwende die Dummy-Daten aus lib/data/dummy-jobs.ts
 const sampleJobs = dummyJobs
 
-// Skeleton Component für Job Cards
+// Skeleton Component für Job Cards mit Shimmer-Effekt
 function JobCardSkeleton() {
   return (
-    <div className="bg-white border-0 shadow-xl rounded-[2rem] overflow-hidden">
-      <div className="flex flex-col sm:flex-row">
-        {/* Left: Image Skeleton */}
-        <div className="relative w-full sm:w-32 md:w-40 h-32 sm:h-auto flex-shrink-0 bg-gradient-to-br from-teal-50 to-cyan-50">
-          <div className="absolute inset-0 flex items-center justify-center p-4">
-            <Skeleton className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl" />
+    <div className="bg-card border border-border/50 shadow-md rounded-lg md:rounded-xl lg:rounded-2xl overflow-hidden">
+      <div className="flex flex-col h-full">
+        {/* Image Skeleton mit Shimmer */}
+        <div className="relative w-full h-32 md:h-40 flex-shrink-0 bg-gradient-to-br from-muted to-muted/50 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
+          <div className="absolute inset-0 flex items-center justify-center p-2 md:p-3 lg:p-4">
+            <Skeleton className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 rounded-lg md:rounded-xl lg:rounded-2xl" />
           </div>
         </div>
 
-        {/* Right: Content Skeleton */}
-        <div className="flex-1 p-6 md:p-8 space-y-5">
+        {/* Content Skeleton */}
+        <div className="flex-1 p-4 md:p-6 space-y-4">
           <div className="space-y-2">
-            <Skeleton className="h-7 w-3/4" />
-            <Skeleton className="h-5 w-1/2" />
+            <Skeleton className="h-6 w-3/4" />
+            <Skeleton className="h-4 w-1/2" />
           </div>
-          <div className="flex flex-wrap gap-4">
-            <Skeleton className="h-10 w-32" />
-            <Skeleton className="h-10 w-32" />
-            <Skeleton className="h-10 w-32" />
+          <div className="space-y-2">
+            <Skeleton className="h-12 w-full rounded-lg" />
+            <Skeleton className="h-12 w-full rounded-lg" />
+            <Skeleton className="h-12 w-full rounded-lg" />
           </div>
-          <div className="flex flex-wrap gap-3">
-            <Skeleton className="h-8 w-24 rounded-full" />
-            <Skeleton className="h-8 w-24 rounded-full" />
+          <div className="flex flex-wrap gap-2">
+            <Skeleton className="h-6 w-20 rounded-full" />
+            <Skeleton className="h-6 w-20 rounded-full" />
           </div>
-          <div className="flex flex-wrap gap-3 pt-3">
-            <Skeleton className="h-12 flex-1 min-w-[160px] rounded-2xl" />
-            <Skeleton className="h-12 flex-1 min-w-[160px] rounded-2xl" />
-            <Skeleton className="h-12 flex-1 min-w-[160px] rounded-2xl" />
+          <div className="flex flex-col gap-2 pt-2">
+            <Skeleton className="h-10 w-full rounded-lg md:rounded-xl" />
+            <Skeleton className="h-10 w-full rounded-lg md:rounded-xl" />
+            <Skeleton className="h-10 w-full rounded-lg md:rounded-xl" />
           </div>
         </div>
       </div>
@@ -164,27 +165,53 @@ export default function JobList({ filters, onJobSelect }: JobListProps) {
     return regionToCity[region] || ""
   }
 
-  // Sortiere Jobs: zuerst direkte Stadt-Jobs, dann Region-Jobs
+  // Sortiere Jobs: zuerst nach Filter-Reihenfolge, dann nach Ort
   const sortedJobs = [...filteredJobs].sort((a, b) => {
-    // Wenn kein spezifischer Ort ausgewählt ist oder mehrere, keine Sortierung
+    // 1. Sortierung nach Filter-Reihenfolge (jobTypes Array-Reihenfolge)
+    if (filters.jobTypes.length > 0 && !filters.jobTypes.includes("all")) {
+      // Finde die Position jedes Jobs im jobTypes Array
+      const aIndex = filters.jobTypes.findIndex((type) => {
+        // Custom Jobs werden ignoriert für die Standard-Sortierung
+        if (type.startsWith("custom-")) return false
+        return a.jobType === type
+      })
+      
+      const bIndex = filters.jobTypes.findIndex((type) => {
+        if (type.startsWith("custom-")) return false
+        return b.jobType === type
+      })
+
+      // Wenn beide Jobs in der Filter-Liste sind, sortiere nach Position
+      if (aIndex !== -1 && bIndex !== -1) {
+        // Jobs sind in unterschiedlichen Filter-Kategorien, sortiere nach Reihenfolge
+        if (aIndex !== bIndex) {
+          return aIndex - bIndex
+        }
+        // Jobs sind in derselben Filter-Kategorie, weiter mit Ort-Sortierung
+      } else if (aIndex !== -1 && bIndex === -1) {
+        // a ist in der Liste, b nicht → a kommt zuerst
+        return -1
+      } else if (aIndex === -1 && bIndex !== -1) {
+        // b ist in der Liste, a nicht → b kommt zuerst
+        return 1
+      }
+      // Beide nicht in der Liste, weiter mit Ort-Sortierung
+    }
+
+    // 2. Sortierung nach Ort (innerhalb derselben Filter-Kategorie)
     const activeLocations = filters.locations.filter((l) => l !== "all")
-    if (activeLocations.length !== 1) {
-      return 0
+    if (activeLocations.length === 1) {
+      const cityName = getCityNameForRegion(activeLocations[0])
+      
+      if (cityName) {
+        const aIsDirectCity = a.location === cityName
+        const bIsDirectCity = b.location === cityName
+
+        // Direkte Stadt-Jobs zuerst
+        if (aIsDirectCity && !bIsDirectCity) return -1
+        if (!aIsDirectCity && bIsDirectCity) return 1
+      }
     }
-
-    const cityName = getCityNameForRegion(activeLocations[0])
-    
-    // Wenn kein Mapping existiert (z.B. val-pusteria), keine Sortierung
-    if (!cityName) {
-      return 0
-    }
-
-    const aIsDirectCity = a.location === cityName
-    const bIsDirectCity = b.location === cityName
-
-    // Direkte Stadt-Jobs zuerst
-    if (aIsDirectCity && !bIsDirectCity) return -1
-    if (!aIsDirectCity && bIsDirectCity) return 1
 
     // Beide sind gleich priorisiert, keine Änderung der Reihenfolge
     return 0
@@ -192,14 +219,14 @@ export default function JobList({ filters, onJobSelect }: JobListProps) {
 
   return (
     <div>
-      <h2 className="text-lg md:text-xl font-bold text-foreground mb-4 md:mb-5">
+      <h2 className="text-sm md:text-lg font-bold text-foreground mb-2 md:mb-4">
         {isLoading ? (
           <Skeleton className="h-6 md:h-8 w-32 md:w-48" />
         ) : (
           `${sortedJobs.length} ${t("jobList.jobsFound")}`
         )}
       </h2>
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 gap-2.5 md:gap-3 lg:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 gap-1.5 md:gap-2.5 lg:gap-3">
         {isLoading ? (
           <>
             <JobCardSkeleton />
@@ -211,7 +238,7 @@ export default function JobList({ filters, onJobSelect }: JobListProps) {
           sortedJobs.map((job) => <JobCard key={job.id} job={job} onSelect={onJobSelect} />)
         ) : (
           <div className="col-span-full">
-            <div className="bg-white rounded-xl md:rounded-2xl p-8 md:p-12 shadow-xl text-center border-2 border-border">
+            <div className="bg-card rounded-xl md:rounded-2xl p-8 md:p-12 shadow-xl text-center border-2 border-border">
               <div className="flex flex-col items-center gap-3 md:gap-4">
                 <SearchX className="w-12 h-12 md:w-16 md:h-16 text-muted-foreground opacity-50" />
                 <div className="space-y-1.5 md:space-y-2">

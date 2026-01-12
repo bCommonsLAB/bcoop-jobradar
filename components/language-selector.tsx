@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useContext } from "react"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { Languages, X, Search } from "lucide-react"
 import { LanguageContext } from "./language-provider"
 
@@ -124,7 +125,7 @@ export function LanguageSelector({ onLanguageSelect, isOpen, onClose, isInitialS
     : null
 
   const mainContent = (
-    <div className={`max-w-2xl w-full bg-white rounded-3xl shadow-2xl p-8 md:p-16 ${isInitialSelection ? 'border-2 border-border' : ''}`}>
+    <div className={`max-w-2xl w-full bg-card rounded-3xl shadow-2xl p-8 md:p-16 ${isInitialSelection ? 'border-2 border-border' : ''}`}>
       <div className="text-center mb-12">
         <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-3xl mb-6 shadow-lg">
           <Languages className="w-10 h-10 text-white" />
@@ -146,7 +147,7 @@ export function LanguageSelector({ onLanguageSelect, isOpen, onClose, isInitialS
             className={`w-full p-6 rounded-2xl border-2 transition-all duration-200 flex items-center gap-4 hover:shadow-lg ${
               selectedLanguage === language.code
                 ? "border-teal-500 bg-teal-50 shadow-md"
-                : "border-border bg-white hover:border-teal-300"
+                : "border-border bg-card hover:border-teal-300"
             }`}
           >
             <span className="text-4xl">{language.flag}</span>
@@ -218,7 +219,7 @@ export function LanguageSelector({ onLanguageSelect, isOpen, onClose, isInitialS
         </div>
         {showMoreLanguagesModal && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
-            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="bg-card rounded-3xl shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden animate-in zoom-in-95 duration-200 relative">
               {/* Modal Header */}
               <div className="bg-gradient-to-r from-teal-500 via-cyan-500 to-teal-600 p-6 flex items-center justify-between sticky top-0 z-10">
                 <div className="flex items-center gap-4">
@@ -256,32 +257,40 @@ export function LanguageSelector({ onLanguageSelect, isOpen, onClose, isInitialS
               <div className="p-6 overflow-y-auto max-h-[calc(85vh-200px)]">
                 {filteredLanguages.length > 0 ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {filteredLanguages.map((language) => (
-                      <button
-                        key={language.code}
-                        onClick={() => handleLanguageSelect(language.code)}
-                        className={`p-5 rounded-2xl border-2 transition-all duration-200 flex flex-col items-start gap-2 hover:shadow-lg ${
-                          selectedLanguage === language.code
-                            ? "border-teal-500 bg-teal-50 shadow-md"
-                            : "border-border bg-white hover:border-teal-300"
-                        }`}
-                      >
-                        <div className="flex items-center gap-3 w-full">
-                          <span className="text-3xl">{language.flag}</span>
-                          <span className="text-lg font-bold text-foreground flex-1 text-left">{language.name}</span>
-                          {selectedLanguage === language.code && (
-                            <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center shrink-0">
-                              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                              </svg>
-                            </div>
-                          )}
-                        </div>
-                        <div className="text-sm text-muted-foreground pl-12">
-                          {language.de} • {language.it} • {language.en}
-                        </div>
-                      </button>
-                    ))}
+                    {filteredLanguages.map((language) => {
+                      const isNew = language.code === "mk" // Mazedonisch ist neu
+                      return (
+                        <button
+                          key={language.code}
+                          onClick={() => handleLanguageSelect(language.code)}
+                          className={`p-5 rounded-2xl border-2 transition-all duration-200 flex flex-col items-start gap-2 hover:shadow-lg relative ${
+                            selectedLanguage === language.code
+                              ? "border-teal-500 bg-teal-50 shadow-md"
+                              : "border-border bg-card hover:border-teal-300"
+                          }`}
+                        >
+                          <div className="flex items-center gap-3 w-full">
+                            <span className="text-3xl">{language.flag}</span>
+                            <span className="text-lg font-bold text-foreground flex-1 text-left">{language.name}</span>
+                            {isNew && (
+                              <Badge variant="default" className="bg-primary text-white shadow-md text-[10px] shrink-0">
+                                Neu
+                              </Badge>
+                            )}
+                            {selectedLanguage === language.code && (
+                              <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center shrink-0">
+                                <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                </svg>
+                              </div>
+                            )}
+                          </div>
+                          <div className="text-sm text-muted-foreground pl-12">
+                            {language.de} • {language.it} • {language.en}
+                          </div>
+                        </button>
+                      )
+                    })}
                   </div>
                 ) : (
                   <div className="text-center py-12">
@@ -325,7 +334,7 @@ export function LanguageSelector({ onLanguageSelect, isOpen, onClose, isInitialS
       </div>
       {showMoreLanguagesModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-[60] animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden animate-in zoom-in-95 duration-200">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden animate-in zoom-in-95 duration-200 relative">
             {/* Modal Header */}
             <div className="bg-gradient-to-r from-teal-500 via-cyan-500 to-teal-600 p-6 flex items-center justify-between sticky top-0 z-10">
               <div className="flex items-center gap-4">
@@ -363,32 +372,40 @@ export function LanguageSelector({ onLanguageSelect, isOpen, onClose, isInitialS
             <div className="p-6 overflow-y-auto max-h-[calc(85vh-200px)]">
               {filteredLanguages.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {filteredLanguages.map((language) => (
-                    <button
-                      key={language.code}
-                      onClick={() => handleLanguageSelect(language.code)}
-                      className={`p-5 rounded-2xl border-2 transition-all duration-200 flex flex-col items-start gap-2 hover:shadow-lg ${
-                        selectedLanguage === language.code
-                          ? "border-teal-500 bg-teal-50 shadow-md"
-                          : "border-border bg-white hover:border-teal-300"
-                      }`}
-                    >
-                      <div className="flex items-center gap-3 w-full">
-                        <span className="text-3xl">{language.flag}</span>
-                        <span className="text-lg font-bold text-foreground flex-1 text-left">{language.name}</span>
-                        {selectedLanguage === language.code && (
-                          <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center shrink-0">
-                            <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                            </svg>
-                          </div>
-                        )}
-                      </div>
-                      <div className="text-sm text-muted-foreground pl-12">
-                        {language.de} • {language.it} • {language.en}
-                      </div>
-                    </button>
-                  ))}
+                  {filteredLanguages.map((language) => {
+                    const isNew = language.code === "mk" // Mazedonisch ist neu
+                    return (
+                      <button
+                        key={language.code}
+                        onClick={() => handleLanguageSelect(language.code)}
+                        className={`p-5 rounded-2xl border-2 transition-all duration-200 flex flex-col items-start gap-2 hover:shadow-lg relative ${
+                          selectedLanguage === language.code
+                            ? "border-teal-500 bg-teal-50 shadow-md"
+                            : "border-border bg-card hover:border-teal-300"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3 w-full">
+                          <span className="text-3xl">{language.flag}</span>
+                          <span className="text-lg font-bold text-foreground flex-1 text-left">{language.name}</span>
+                          {isNew && (
+                            <Badge variant="default" className="bg-primary text-white shadow-md text-[10px] shrink-0">
+                              Neu
+                            </Badge>
+                          )}
+                          {selectedLanguage === language.code && (
+                            <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center shrink-0">
+                              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                              </svg>
+                            </div>
+                          )}
+                        </div>
+                        <div className="text-sm text-muted-foreground pl-12">
+                          {language.de} • {language.it} • {language.en}
+                        </div>
+                      </button>
+                    )
+                  })}
                 </div>
               ) : (
                 <div className="text-center py-12">

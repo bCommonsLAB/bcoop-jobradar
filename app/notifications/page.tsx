@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button"
 import JobNotifications from "@/components/job-notifications"
 import { LanguageProvider, useLanguage } from "@/components/language-provider"
 import { LanguageToggleButton } from "@/components/language-toggle-button"
+import { ScrollToTop } from "@/components/scroll-to-top"
+import { Filter, Settings } from "lucide-react"
 import { useTranslation } from "@/hooks/use-translation"
 
 function NotificationsPageContent() {
@@ -66,18 +68,21 @@ function NotificationsPageContent() {
       </div>
 
       <div className="max-w-6xl mx-auto px-2 md:px-5 py-2 md:py-5">
-        <div className="bg-white rounded-xl md:rounded-3xl p-2 md:p-5 shadow-md mb-3 md:mb-6 transition-all duration-200 hover:shadow-lg">
-          <div className="flex items-center gap-1.5 md:gap-3 mb-1.5 md:mb-3">
-            <div className="w-7 h-7 md:w-10 md:h-10 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-lg md:rounded-2xl flex items-center justify-center shadow-md">
-              <Bell className="w-3.5 h-3.5 md:w-5 md:h-5 text-white" />
+        {/* Verbesserte Header-Section */}
+        <div className="bg-gradient-to-br from-primary/10 via-accent/5 to-transparent rounded-xl md:rounded-2xl p-4 md:p-6 lg:p-8 mb-4 md:mb-6">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-primary/20 flex items-center justify-center shadow-md">
+              <Bell className="w-5 h-5 md:w-6 md:h-6 text-primary" />
             </div>
-            <h2 className="text-lg md:text-2xl lg:text-3xl font-bold text-foreground leading-tight tracking-tight">
-              {t("notifications.title")}
-            </h2>
+            <div>
+              <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-foreground leading-tight tracking-tight">
+                {t("notifications.title")}
+              </h1>
+              <p className="text-xs md:text-sm text-muted-foreground mt-1">
+                {t("notifications.description")}
+              </p>
+            </div>
           </div>
-          <p className="text-[11px] md:text-sm text-muted-foreground leading-relaxed tracking-normal">
-            {t("notifications.description")}
-          </p>
         </div>
 
         <JobNotifications />
@@ -94,6 +99,8 @@ function NotificationsPageContent() {
           </div>
         </div>
       </footer>
+      
+      <ScrollToTop />
     </div>
   )
 }
