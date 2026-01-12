@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { X, Filter, Edit, ChevronDown, ChevronUp } from "lucide-react"
 import { ChefHat, UtensilsCrossed, Bed, Users, Coffee, MapPin, Calendar, Sparkles, GraduationCap } from "lucide-react"
 import { useTranslation } from "@/hooks/use-translation"
+import { getJobTypeTone } from "@/lib/job-type-colors"
 
 interface ActiveFiltersProps {
   filters: {
@@ -48,11 +49,18 @@ function FilterChipGroup({ chips, max = 3, onRemove, filterType }: FilterChipGro
     <div className="flex flex-wrap gap-2">
       {visibleChips.map((chip) => {
         const Icon = chip.icon || Sparkles
+        // Arbeitsbereich (Job-Typ) bekommt einen spezifischen Farbton; andere Filter bleiben im bestehenden Primary-Look.
+        const tone = filterType === "jobTypes" ? getJobTypeTone(chip.value) : null
         return (
           <Badge
             key={chip.value}
             variant="secondary"
-            className="px-2 md:px-3 py-0.5 md:py-1.5 text-[10px] md:text-sm font-semibold rounded-md md:rounded-lg bg-gradient-to-r from-primary/10 to-cyan-50 text-primary border-2 border-primary/20 flex items-center gap-1.5 transition-all duration-300 hover:shadow-lg hover:scale-105"
+            className={[
+              "px-2 md:px-3 py-0.5 md:py-1.5 text-[10px] md:text-sm font-semibold rounded-md md:rounded-lg border-2 flex items-center gap-1.5 transition-all duration-300",
+              tone
+                ? tone.badge
+                : "bg-gradient-to-r from-primary/10 to-cyan-50 text-primary border-primary/20 hover:shadow-lg hover:scale-105",
+            ].join(" ")}
           >
             <Icon className="w-3 h-3 md:w-4 md:h-4" />
             <span>{chip.label}</span>
@@ -128,12 +136,6 @@ export default function ActiveFilters({ filters, onRemoveFilter, onEditFilters }
   }
 
   // Filter-Zählung
-  const totalActiveFilters = 
-    activeJobTypes.length + 
-    (filters.timeframe !== "all" ? 1 : 0) + 
-    activeLocations.length + 
-    (filters.noQualificationRequired ? 1 : 0)
-
   // Chips für Gruppen vorbereiten
   const jobTypeChips: FilterChip[] = activeJobTypes.map((jobType) => {
     const jobTypeInfo = jobTypeLabels[jobType] || { label: jobType, icon: Sparkles }

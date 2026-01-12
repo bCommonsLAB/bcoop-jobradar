@@ -27,6 +27,7 @@ import { useTranslation } from "@/hooks/use-translation"
 import { useToast } from "@/hooks/use-toast"
 import { iconSizes } from "@/lib/icon-sizes"
 import { cn } from "@/lib/utils"
+import { getJobTypeTone } from "@/lib/job-type-colors"
 
 interface JobFiltersProps {
   onSubmit: (filters: { jobTypes: string[]; timeframe: string; locations: string[]; noQualificationRequired: boolean }) => void
@@ -408,6 +409,7 @@ export default function JobFilters({
           {jobTypeOptions.map((type) => {
             const Icon = type.icon
             const isSelected = jobTypes.includes(type.value)
+            const tone = getJobTypeTone(type.value)
             return (
               <button
                 key={type.value}
@@ -415,13 +417,16 @@ export default function JobFilters({
                 className={cn(
                   "py-1 md:py-2 px-1 md:px-2 rounded-md md:rounded-lg text-[9px] md:text-xs font-bold transition-all duration-200 border-2 flex flex-col items-center gap-0.5 md:gap-1 touch-manipulation min-h-[44px]",
                   isSelected
-                    ? "bg-gradient-to-br from-primary to-cyan-600 text-white border-primary shadow-md scale-[1.02] ring-1 ring-primary/30"
-                    : "bg-gradient-to-br from-white to-gray-50 dark:from-[#2c2c2c] dark:to-[#2c2c2c] text-foreground border-border/50 dark:border-[#3c3c3c] hover:border-primary/50 dark:hover:bg-[#2c2c2c] hover:shadow-sm hover:scale-[1.02] active:scale-95"
+                    ? tone.buttonSelected
+                    : tone.buttonUnselected
                 )}
                 aria-label={`${type.label} ${isSelected ? "ausgewählt" : "auswählen"}`}
                 aria-pressed={isSelected}
               >
-                <Icon className={cn("w-3 h-3 md:w-4 md:h-4", isSelected ? "text-white" : "text-primary")} aria-hidden="true" />
+                <Icon
+                  className={cn("w-3 h-3 md:w-4 md:h-4", isSelected ? "text-white" : tone.iconUnselected)}
+                  aria-hidden="true"
+                />
                 <span className="text-center leading-tight">{type.label}</span>
               </button>
             )

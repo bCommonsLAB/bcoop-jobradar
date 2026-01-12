@@ -1,121 +1,10 @@
 import type { Language } from "@/components/language-provider"
 
-export type TranslationKey = 
-  | "welcome.title"
-  | "welcome.description"
-  | "welcome.howItWorks"
-  | "welcome.step1Title"
-  | "welcome.step1Description"
-  | "welcome.step2Title"
-  | "welcome.step2Description"
-  | "welcome.startNow"
-  | "welcome.footer"
-  | "welcome.changeLanguage"
-  | "welcome.notificationTitle"
-  | "welcome.notificationDescription"
-  | "welcome.activateNotifications"
-  | "welcome.notificationPrompt"
-  | "welcome.notificationAction"
-  | "nav.jobs"
-  | "nav.backToStart"
-  | "jobs.step1Title"
-  | "jobs.step1Description"
-  | "jobs.step2Title"
-  | "jobs.step2Description"
-  | "jobs.modifyFilters"
-  | "stepIndicator.filters"
-  | "stepIndicator.offers"
-  | "stepIndicator.step"
-  | "stepIndicator.of"
-  | "filters.jobType"
-  | "filters.timeframe"
-  | "filters.location"
-  | "filters.period"
-  | "filters.otherJobs"
-  | "filters.continueToOffers"
-  | "filters.searchPlaceholder"
-  | "filters.noJobsFound"
-  | "filters.tryAnotherSearch"
-  | "filters.pleaseSelectFilter"
-  | "filters.qualification"
-  | "filters.noQualificationRequired"
-  | "jobTypes.all"
-  | "jobTypes.kitchen"
-  | "jobTypes.dishwasher"
-  | "jobTypes.housekeeping"
-  | "jobTypes.helper"
-  | "jobTypes.service"
-  | "timeframes.all"
-  | "timeframes.week"
-  | "timeframes.month"
-  | "locations.all"
-  | "locations.bolzano"
-  | "locations.merano"
-  | "locations.bressanone"
-  | "locations.brunico"
-  | "locations.vipiteno"
-  | "locations.valPusteria"
-  | "locations.valVenosta"
-  | "jobCard.call"
-  | "jobCard.email"
-  | "jobCard.details"
-  | "jobList.noJobsFound"
-  | "jobList.tryModifySelection"
-  | "jobList.jobsFound"
-  | "activeFilters.title"
-  | "activeFilters.editFilters"
-  | "activeFilters.removeJobType"
-  | "activeFilters.removeTimeframe"
-  | "activeFilters.removeLocation"
-  | "activeFilters.removeQualificationFilter"
-  | "activeFilters.showDetails"
-  | "activeFilters.hideDetails"
-  | "activeFilters.activeCount"
-  | "activeFilters.others"
-  | "jobModal.salary"
-  | "jobModal.jobType"
-  | "jobModal.position"
-  | "jobModal.from"
-  | "jobModal.reference"
-  | "jobModal.jobDescription"
-  | "jobModal.tasks"
-  | "jobModal.requirements"
-  | "jobModal.experienceLevel"
-  | "jobModal.education"
-  | "jobModal.requiredLanguages"
-  | "jobModal.certifications"
-  | "jobModal.contact"
-  | "jobModal.apply"
-  | "jobModal.toBeAgreed"
-  | "notifications.title"
-  | "notifications.description"
-  | "notifications.frequency"
-  | "notifications.daily"
-  | "notifications.weekly"
-  | "notifications.monthly"
-  | "notifications.deliveryMethod"
-  | "notifications.email"
-  | "notifications.whatsapp"
-  | "notifications.emailPlaceholder"
-  | "notifications.whatsappPlaceholder"
-  | "notifications.activate"
-  | "notifications.deactivate"
-  | "notifications.update"
-  | "notifications.active"
-  | "notifications.privacy"
-  | "notifications.unsubscribe"
-  | "notifications.selectFilters"
-  | "notifications.selectDays"
-  | "notifications.selectTime"
-  | "notifications.monday"
-  | "notifications.tuesday"
-  | "notifications.wednesday"
-  | "notifications.thursday"
-  | "notifications.friday"
-  | "notifications.saturday"
-  | "notifications.sunday"
+// TranslationKey wird weiter unten aus `translations` abgeleitet.
 
-const translations: Record<Language, Record<TranslationKey, string>> = {
+// Die konkrete Übersetzungs-Tabelle darf mehr Keys enthalten als `TranslationKey`.
+// `TranslationKey` beschreibt nur die Keys, die wir im Code *typisiert* verwenden wollen.
+const translations: Record<Language, Record<string, string>> = {
   it: {
     "welcome.title": "Benvenuto al b*coop Job*radar",
     "welcome.description": "Trova velocemente offerte di lavoro attuali in hotel e aziende in Alto Adige. Senza registrazione, subito pronto.",
@@ -2647,12 +2536,14 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
 }
 
 // Fallback-Funktion für fehlende Übersetzungen
+export type TranslationKey = keyof typeof translations.it
+
 function getTranslation(lang: Language, key: TranslationKey): string {
-  const translation = translations[lang]?.[key]
+  const translation = (translations[lang] as Record<TranslationKey, string> | undefined)?.[key]
   if (translation) return translation
   
   // Fallback auf Italienisch
-  const itTranslation = translations.it[key]
+  const itTranslation = (translations.it as Record<TranslationKey, string>)[key]
   if (itTranslation) return itTranslation
   
   // Fallback auf Key selbst als letzte Option

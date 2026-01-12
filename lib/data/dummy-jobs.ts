@@ -1,54 +1,11 @@
 /**
  * Dummy-Job-Daten für die Job-Radar Anwendung
- * 
- * Diese Datei enthält 10 realistische Job-Datensätze für verschiedene Job-Typen
- * in Südtirol. Die Daten werden später durch echte MongoDB-Daten ersetzt.
+ *
+ * Diese Datei bleibt als Daten-Referenz / Seed-Vorlage bestehen.
+ * Die produktive Datenquelle ist MongoDB (siehe `app/api/jobs/route.ts`).
  */
 
-export interface Job {
-  // Basis-Felder
-  id: string
-  title: string
-  company: string
-  location: string
-  locationRegion: string
-  employmentType: string
-  startDate: string
-  jobType: "dishwasher" | "kitchen" | "housekeeping" | "helper" | "service" | "all"
-  
-  // Kontakt
-  phone: string
-  email: string
-  
-  // Benefits
-  hasAccommodation: boolean
-  hasMeals: boolean
-  
-  // Beschreibungen
-  description: string
-  companyDescription?: string
-  companyWebsite?: string
-  companyAddress?: string
-  fullDescription?: string
-  
-  // Erweiterte Felder
-  requirements?: string[]
-  benefits?: string[]
-  contractType?: string
-  experienceLevel?: string
-  education?: string
-  languages?: string[]
-  certifications?: string[]
-  contactPerson?: string
-  contactPhone?: string
-  contactEmail?: string
-  workingHours?: string
-  salaryMin?: number
-  salaryMax?: number
-  numberOfPositions?: number
-  applicationDeadline?: string
-  jobReference?: string
-}
+import type { Job } from "@/lib/job"
 
 /**
  * 10 realistische Dummy-Job-Datensätze für verschiedene Job-Typen

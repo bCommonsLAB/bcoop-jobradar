@@ -8,7 +8,6 @@ import JobNotifications from "@/components/job-notifications"
 import { LanguageProvider, useLanguage } from "@/components/language-provider"
 import { LanguageToggleButton } from "@/components/language-toggle-button"
 import { ScrollToTop } from "@/components/scroll-to-top"
-import { Filter, Settings } from "lucide-react"
 import { useTranslation } from "@/hooks/use-translation"
 
 function NotificationsPageContent() {

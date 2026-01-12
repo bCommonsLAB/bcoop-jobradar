@@ -47,6 +47,9 @@ export default function RootLayout({
 }>) {
   // params und searchParams werden nicht verwendet, aber explizit deklariert,
   // um den Next.js 16 Promise-Fehler zu vermeiden
+  // eslint/no-unused-vars wäre sonst ein False-Positive → wir markieren sie bewusst als "genutzt".
+  void params
+  void searchParams
   return (
     <html lang="de">
       <body className={`${inter.className} antialiased`}>

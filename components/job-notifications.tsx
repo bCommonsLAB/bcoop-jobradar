@@ -59,7 +59,14 @@ export default function JobNotifications({ filters: propsFilters }: JobNotificat
   })
 
   // Verwende übergebene Filter oder gespeicherte Filter aus Settings
-  const filters = propsFilters ?? settings.filters
+  // WICHTIG: `noQualificationRequired` ist in `NotificationSettings["filters"]` verpflichtend.
+  // Props dürfen es optional liefern, daher normalisieren wir hier auf ein sicheres Shape.
+  const filters: NotificationSettings["filters"] = {
+    jobTypes: propsFilters?.jobTypes ?? settings.filters.jobTypes,
+    timeframe: propsFilters?.timeframe ?? settings.filters.timeframe,
+    locations: propsFilters?.locations ?? settings.filters.locations,
+    noQualificationRequired: propsFilters?.noQualificationRequired ?? settings.filters.noQualificationRequired,
+  }
 
   // Lade gespeicherte Einstellungen beim Mount
   useEffect(() => {
@@ -129,7 +136,7 @@ export default function JobNotifications({ filters: propsFilters }: JobNotificat
     saveSettings({ ...settings, whatsapp })
   }
 
-  const handleFiltersChange = (newFilters: { jobTypes: string[]; timeframe: string; locations: string[] }) => {
+  const handleFiltersChange = (newFilters: NotificationSettings["filters"]) => {
     saveSettings({ ...settings, filters: newFilters })
   }
 

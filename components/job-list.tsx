@@ -4,8 +4,8 @@ import { useState, useEffect } from "react"
 import JobCard from "@/components/job-card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { SearchX } from "lucide-react"
-import { dummyJobs } from "@/lib/data/dummy-jobs"
 import { useTranslation } from "@/hooks/use-translation"
+import type { Job } from "@/lib/job"
 
 interface JobListProps {
   filters: {
@@ -16,9 +16,6 @@ interface JobListProps {
   }
   onJobSelect: () => void
 }
-
-// Verwende die Dummy-Daten aus lib/data/dummy-jobs.ts
-const sampleJobs = dummyJobs
 
 // Skeleton Component für Job Cards mit Shimmer-Effekt
 function JobCardSkeleton() {
@@ -60,18 +57,64 @@ function JobCardSkeleton() {
 }
 
 export default function JobList({ filters, onJobSelect }: JobListProps) {
-  const [isLoading, setIsLoading] = useState(false)
+  const [jobs, setJobs] = useState<Job[]>([])
+  const [loadError, setLoadError] = useState<string | null>(null)
+  const [isFetchingJobs, setIsFetchingJobs] = useState(true)
+  const [isFilterLoading, setIsFilterLoading] = useState(false)
+  const isLoading = isFetchingJobs || isFilterLoading
   const { t } = useTranslation()
 
+  // Initial: Jobs aus der DB laden (serverseitig via API-Route).
   useEffect(() => {
-    setIsLoading(true)
+    let isCancelled = false
+    const controller = new AbortController()
+
+    async function loadJobs() {
+      setIsFetchingJobs(true)
+      setLoadError(null)
+
+      try {
+        const res = await fetch("/api/jobs", { signal: controller.signal })
+        if (!res.ok) {
+          // Die API liefert i.d.R. { error }, wir zeigen aber nur eine kurze Message.
+          throw new Error(`Jobs konnten nicht geladen werden (HTTP ${res.status}).`)
+        }
+
+        const data = (await res.json()) as { jobs?: Job[] }
+        if (!isCancelled) {
+          setJobs(data.jobs ?? [])
+        }
+      } catch (error) {
+        // AbortError ist erwartbar beim Unmount.
+        if (!isCancelled && !(error instanceof DOMException && error.name === "AbortError")) {
+          const message = error instanceof Error ? error.message : "Unbekannter Fehler"
+          setLoadError(message)
+          setJobs([])
+        }
+      } finally {
+        if (!isCancelled) {
+          setIsFetchingJobs(false)
+        }
+      }
+    }
+
+    loadJobs()
+
+    return () => {
+      isCancelled = true
+      controller.abort()
+    }
+  }, [])
+
+  useEffect(() => {
+    setIsFilterLoading(true)
     const timer = setTimeout(() => {
-      setIsLoading(false)
+      setIsFilterLoading(false)
     }, 400)
     return () => clearTimeout(timer)
   }, [filters.jobTypes, filters.timeframe, filters.locations])
 
-  const filteredJobs = sampleJobs.filter((job) => {
+  const filteredJobs = jobs.filter((job) => {
     // Filter by job types (array)
     if (filters.jobTypes.length > 0 && !filters.jobTypes.includes("all")) {
       // Check if job matches any of the selected types
@@ -226,6 +269,11 @@ export default function JobList({ filters, onJobSelect }: JobListProps) {
           `${sortedJobs.length} ${t("jobList.jobsFound")}`
         )}
       </h2>
+      {!isLoading && loadError && (
+        <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs md:text-sm text-red-700">
+          {loadError}
+        </div>
+      )}
       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 gap-1.5 md:gap-2.5 lg:gap-3">
         {isLoading ? (
           <>
