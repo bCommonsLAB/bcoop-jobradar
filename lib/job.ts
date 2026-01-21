@@ -82,3 +82,17 @@ export function normalizeJobDocument(doc: unknown): Job {
   return { ...(rest as Omit<Job, "id">), id }
 }
 
+/**
+ * Job-Input für die Erstellung (ohne id, created_at, updated_at)
+ * 
+ * Wird für API-Requests verwendet (POST /api/jobs)
+ */
+export type JobCreateInput = Omit<Job, "id">
+
+/**
+ * Request-Body für POST /api/jobs
+ */
+export interface JobCreateRequest {
+  jobs: JobCreateInput[]
+}
+

@@ -7,25 +7,25 @@ overview: |-
 todos:
   - id: doc-analysis
     content: Analyse/Entscheidung in docs/ dokumentieren
-    status: pending
+    status: completed
   - id: secretary-core
     content: Secretary-Proxy + Client + Timeout-Utils ergänzen
-    status: pending
+    status: completed
   - id: job-mapping
     content: Mapping + Parser + Typen für Job-Import bauen
-    status: pending
+    status: completed
   - id: api-jobs-post
     content: POST /api/jobs implementieren (Validierung/Insert)
-    status: pending
+    status: completed
   - id: admin-ui
     content: Admin-Import-UI in kleine Komponenten bauen
-    status: pending
+    status: completed
   - id: tests
     content: Unit-Tests für Parser/Mapper schreiben
-    status: pending
+    status: completed
   - id: quality-checks
     content: Lint + Tests ausführen und berichten
-    status: pending
+    status: completed
 ---
 
 ## Überlegungen
