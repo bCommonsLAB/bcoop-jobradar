@@ -16,33 +16,43 @@
 import "dotenv/config"
 
 import { dummyJobs } from "@/lib/data/dummy-jobs"
-import { getConfiguredCollection, readMongoEnvConfig } from "@/lib/mongodb-service"
+import { readMongoEnvConfig } from "@/lib/mongodb-service"
 import type { Job } from "@/lib/job"
+import { MongoClient } from "mongodb"
 
 type JobDocument = Job & { _id?: unknown }
 
 async function main() {
-  const { databaseName, collectionName } = readMongoEnvConfig()
+  const { uri, databaseName, collectionName } = readMongoEnvConfig()
 
   console.log(`[seed] Ziel: DB="${databaseName}" Collection="${collectionName}"`)
   console.log(`[seed] Dummy-Jobs: ${dummyJobs.length}`)
 
-  const collection = await getConfiguredCollection<JobDocument>()
+  // Wichtig: Für Scripts schließen wir die Verbindung explizit,
+  // sonst bleibt der Node-Eventloop aktiv und das Script "hängt".
+  const client = new MongoClient(uri)
+  await client.connect()
 
-  const operations = dummyJobs.map((job) => ({
-    replaceOne: {
-      filter: { id: job.id },
-      replacement: job,
-      upsert: true,
-    },
-  }))
+  try {
+    const collection = client.db(databaseName).collection<JobDocument>(collectionName)
 
-  const result = await collection.bulkWrite(operations, { ordered: false })
+    const operations = dummyJobs.map((job) => ({
+      replaceOne: {
+        filter: { id: job.id },
+        replacement: job,
+        upsert: true,
+      },
+    }))
 
-  console.log("[seed] Fertig.")
-  console.log(`[seed] matched:   ${result.matchedCount}`)
-  console.log(`[seed] modified:  ${result.modifiedCount}`)
-  console.log(`[seed] upserted:  ${result.upsertedCount}`)
+    const result = await collection.bulkWrite(operations, { ordered: false })
+
+    console.log("[seed] Fertig.")
+    console.log(`[seed] matched:   ${result.matchedCount}`)
+    console.log(`[seed] modified:  ${result.modifiedCount}`)
+    console.log(`[seed] upserted:  ${result.upsertedCount}`)
+  } finally {
+    await client.close()
+  }
 }
 
 main().catch((error) => {
