@@ -52,25 +52,32 @@ export default function JobFilters({
 }: JobFiltersProps) {
   const { t } = useTranslation()
   const { toast } = useToast()
-  const [jobTypes, setJobTypes] = useState<string[]>(initialFilters?.jobTypes || [])
+  const [jobTypes, setJobTypes] = useState<string[]>(() => {
+    if (initialFilters?.jobTypes && initialFilters.jobTypes.length > 0) {
+      return initialFilters.jobTypes
+    }
+    return ["all"]
+  })
   const [timeframe, setTimeframe] = useState<string>(initialFilters?.timeframe || "all")
-  const [locations, setLocations] = useState<string[]>(initialFilters?.locations || [])
+  const [locations, setLocations] = useState<string[]>(() => {
+    if (initialFilters?.locations && initialFilters.locations.length > 0) {
+      return initialFilters.locations
+    }
+    return ["all"]
+  })
   const [noQualificationRequired, setNoQualificationRequired] = useState<boolean>(initialFilters?.noQualificationRequired || false)
   const [isJobSelectorOpen, setIsJobSelectorOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [customJobs, setCustomJobs] = useState<CustomJob[]>([])
   const [showJobTypeError, setShowJobTypeError] = useState(false)
   const [showLocationError, setShowLocationError] = useState(false)
-  
-  // Job-Typen die keine Ausbildung benötigen
-  const noQualificationJobTypes = ["dishwasher", "helper", "housekeeping"]
 
   // Update state when initialFilters change
   useEffect(() => {
     if (initialFilters) {
-      setJobTypes(initialFilters.jobTypes || [])
+      setJobTypes(initialFilters.jobTypes && initialFilters.jobTypes.length > 0 ? initialFilters.jobTypes : ["all"])
       setTimeframe(initialFilters.timeframe || "all")
-      setLocations(initialFilters.locations || [])
+      setLocations(initialFilters.locations && initialFilters.locations.length > 0 ? initialFilters.locations : ["all"])
       setNoQualificationRequired(initialFilters.noQualificationRequired || false)
     }
   }, [initialFilters])
@@ -148,58 +155,17 @@ export default function JobFilters({
   const handleQualificationToggle = (checked: boolean) => {
     setNoQualificationRequired(checked)
     
-    // Option D: Automatische Vorauswahl + Toast
+    // Toast-Benachrichtigung
     if (checked) {
-      // Prüfe ob bereits Job-Typen ausgewählt sind
-      const hasSelectedJobTypes = jobTypes.length > 0 && !jobTypes.includes("all")
-      
-      if (!hasSelectedJobTypes) {
-        // Automatisch passende Jobs vorauswählen
-        const newJobTypes = noQualificationJobTypes
-        setJobTypes(newJobTypes)
-        
-        // Toast-Benachrichtigung
-        toast({
-          title: t("filters.autoSelectTitle") || "Passende Jobs vorausgewählt",
-          description: t("filters.autoSelectDescription") || "Wir haben passende Jobs für dich vorausgewählt. Du kannst jederzeit alle Jobs anzeigen.",
-          action: (
-            <button
-              onClick={() => {
-                setJobTypes(["all"])
-                toast({
-                  title: t("filters.allJobsShown") || "Alle Jobs angezeigt",
-                  description: t("filters.allJobsShownDescription") || "Alle verfügbaren Jobs werden jetzt angezeigt.",
-                })
-                if (autoApply) {
-                  onSubmit({ jobTypes: ["all"], timeframe, locations, noQualificationRequired: checked })
-                }
-              }}
-              className="text-xs font-semibold text-primary hover:underline"
-            >
-              {t("filters.showAllJobs") || "Alle anzeigen"}
-            </button>
-          ),
-        })
-        
-        if (autoApply) {
-          onSubmit({ jobTypes: newJobTypes, timeframe, locations, noQualificationRequired: checked })
-        }
-      } else {
-        // Benutzer hat bereits Jobs ausgewählt - nur Toast ohne Änderung
-        toast({
-          title: t("filters.qualificationFilterActive") || "Filter aktiviert",
-          description: t("filters.qualificationFilterDescription") || "Es werden nur Jobs ohne Qualifikationsanforderungen angezeigt.",
-        })
-        
-        if (autoApply) {
-          onSubmit({ jobTypes, timeframe, locations, noQualificationRequired: checked })
-        }
-      }
-    } else {
-      // Toggle deaktiviert - normale Logik
-      if (autoApply) {
-        onSubmit({ jobTypes, timeframe, locations, noQualificationRequired: false })
-      }
+      toast({
+        title: t("filters.qualificationFilterActive") || "Filter aktiviert",
+        description: t("filters.qualificationFilterDescription") || "Es werden nur Jobs ohne Qualifikationsanforderungen angezeigt.",
+      })
+    }
+    
+    // Filter submitten ohne Job-Typen zu ändern
+    if (autoApply) {
+      onSubmit({ jobTypes, timeframe, locations, noQualificationRequired: checked })
     }
   }
   
@@ -395,15 +361,6 @@ export default function JobFilters({
               <p className="text-xs text-muted-foreground hidden md:block">Wähle deinen Arbeitsbereich</p>
             </div>
           </div>
-          {noQualificationRequired && jobTypes.length > 0 && !jobTypes.includes("all") && jobTypes.every(jt => noQualificationJobTypes.includes(jt)) && (
-            <button
-              onClick={handleShowAllJobs}
-              className="text-xs font-semibold text-primary hover:underline flex items-center gap-1"
-              aria-label="Alle Jobs anzeigen"
-            >
-              {t("filters.showAllJobs") || "Alle anzeigen"}
-            </button>
-          )}
         </div>
         <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-1 md:gap-2">
           {jobTypeOptions.map((type) => {
@@ -528,12 +485,12 @@ export default function JobFilters({
               <button
                 key={loc.value}
                 onClick={() => handleLocationToggle(loc.value)}
-                className={cn(
-                  "py-1 md:py-2 px-1 md:px-2 rounded-md md:rounded-lg text-[9px] md:text-xs font-bold transition-all duration-200 border-2 flex flex-col items-center gap-0.5 md:gap-1 touch-manipulation min-h-[44px]",
-                  isSelected
-                    ? "bg-gradient-to-br from-primary to-cyan-600 text-white border-primary shadow-md scale-[1.02] ring-1 ring-primary/30"
-                    : "bg-gradient-to-br from-white to-gray-50 dark:from-[#2c2c2c] dark:to-[#2c2c2c] text-foreground border-border/50 dark:border-[#3c3c3c] hover:border-primary/50 dark:hover:bg-[#2c2c2c] hover:shadow-sm hover:scale-[1.02] active:scale-95"
-                )}
+              className={cn(
+                "py-1 md:py-2 px-1 md:px-2 rounded-md md:rounded-lg text-[9px] md:text-xs font-bold transition-all duration-200 border-2 flex flex-col items-center gap-0.5 md:gap-1 touch-manipulation min-h-[44px]",
+                isSelected
+                  ? "bg-gradient-to-br from-primary to-cyan-600 text-white border-primary shadow-md scale-[1.02] ring-1 ring-primary/30"
+                  : "bg-gradient-to-br from-white to-gray-50 text-foreground border-border/50 hover:border-primary/50 hover:shadow-sm hover:scale-[1.02] active:scale-95"
+              )}
                 aria-label={`${loc.label} ${isSelected ? "ausgewählt" : "auswählen"}`}
                 aria-pressed={isSelected}
               >

@@ -1,14 +1,16 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Image from "next/image"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Phone, Mail, MapPin, Calendar, Home, Utensils, Briefcase } from "lucide-react"
+import { Phone, Mail, MapPin, Calendar, Home, Utensils, Briefcase, ExternalLink, Heart } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import JobDetailModal from "./job-detail-modal"
 import { useTranslation } from "@/hooks/use-translation"
 import { iconSizes } from "@/lib/icon-sizes"
+import { isJobLiked, toggleLike } from "@/lib/liked-jobs"
+import { cn } from "@/lib/utils"
 
 interface Job {
   id: string
@@ -22,6 +24,7 @@ interface Job {
   phone: string
   email: string
   description: string
+  externalUrl?: string // URL zur externen Job-Webseite, falls der Job von einer anderen Plattform stammt
 }
 
 interface JobCardProps {
@@ -31,11 +34,27 @@ interface JobCardProps {
 
 export default function JobCard({ job, onSelect }: JobCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isLiked, setIsLiked] = useState(false)
   const { t } = useTranslation()
+
+  // Prüfe Like-Status beim Mount
+  useEffect(() => {
+    setIsLiked(isJobLiked(job.id))
+  }, [job.id])
 
   const handleContact = () => {
     if (onSelect) {
       onSelect()
+    }
+  }
+
+  const handleLikeToggle = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    const newLikeStatus = toggleLike(job.id)
+    setIsLiked(newLikeStatus)
+    // Dispatch Custom Event, damit andere Komponenten (z.B. Favorites-Seite) aktualisiert werden
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("job-liked-changed"))
     }
   }
 
@@ -53,9 +72,25 @@ export default function JobCard({ job, onSelect }: JobCardProps) {
 
   return (
     <>
-      <Card className="relative bg-card border border-border/50 shadow-md hover:shadow-xl transition-all duration-300 rounded-lg md:rounded-xl lg:rounded-2xl overflow-hidden group hover:-translate-y-1 h-full flex flex-col focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2">
-        {/* Status Badge - Optional für neue Jobs */}
-        <div className="absolute top-2 right-2 z-10">
+      <Card className={cn(
+        "relative bg-card border border-border/35 shadow-sm hover:shadow-md transition-all duration-300 rounded-xl md:rounded-2xl lg:rounded-3xl overflow-hidden group hover:-translate-y-0.5 h-full flex flex-col focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2",
+        isLiked && "border-t-4 border-t-primary"
+      )}>
+        {/* Like Button und Status Badge */}
+        <div className="absolute top-2 right-2 z-10 flex items-center gap-1.5">
+          <button
+            onClick={handleLikeToggle}
+            type="button"
+            className={cn(
+              "p-1.5 md:p-2 rounded-full transition-all duration-200 shadow-md hover:shadow-lg hover:scale-110 active:scale-95",
+              isLiked
+                ? "bg-primary text-white hover:bg-primary/90 border-2 border-primary"
+                : "bg-white/90 text-muted-foreground/60 hover:bg-white hover:text-primary border-2 border-border/50"
+            )}
+            aria-label={isLiked ? t("jobCard.unlike") || "Job entliken" : t("jobCard.like") || "Job liken"}
+          >
+            <Heart className={cn("w-3 h-3 md:w-4 md:h-4", isLiked && "fill-current")} />
+          </button>
           <Badge variant="default" className="bg-primary text-white shadow-lg text-[8px] md:text-[10px]">
             Neu
           </Badge>
@@ -78,7 +113,7 @@ export default function JobCard({ job, onSelect }: JobCardProps) {
           </div>
 
           {/* Job Information */}
-          <div className="flex-1 p-2 md:p-4 space-y-1.5 md:space-y-3 flex flex-col">
+          <div className="flex-1 p-3 md:p-5 lg:p-6 space-y-2 md:space-y-3 lg:space-y-4 flex flex-col">
             {/* Header: Title and Company - Kompakter */}
             <div className="flex-shrink-0">
               <h3 className="text-xs md:text-base lg:text-lg font-bold text-foreground leading-tight mb-0.5 tracking-tight line-clamp-2">{job.title}</h3>
@@ -86,9 +121,9 @@ export default function JobCard({ job, onSelect }: JobCardProps) {
             </div>
 
             {/* Job Details - Kompakter */}
-            <div className="space-y-1.5 md:space-y-2 flex-shrink-0">
-              <div className="flex items-center gap-2 px-2.5 py-1 md:px-3 md:py-1.5 rounded-lg bg-muted/50">
-                <div className="p-1 md:p-1.5 rounded-md bg-primary/10 flex-shrink-0">
+            <div className="space-y-2 md:space-y-2.5 lg:space-y-3 flex-shrink-0">
+              <div className="flex items-center gap-2.5 md:gap-3 px-3 py-2 md:px-4 md:py-2.5 rounded-xl md:rounded-2xl bg-muted/40">
+                <div className="p-1.5 md:p-2 rounded-lg md:rounded-xl bg-primary/10 flex-shrink-0">
                   <MapPin className={`${iconSizes.sm} text-primary`} />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -96,8 +131,8 @@ export default function JobCard({ job, onSelect }: JobCardProps) {
                   <span className="text-xs md:text-sm font-semibold truncate block">{job.location}</span>
                 </div>
               </div>
-              <div className="flex items-center gap-2 px-2.5 py-1 md:px-3 md:py-1.5 rounded-lg bg-muted/50">
-                <div className="p-1 md:p-1.5 rounded-md bg-accent/20 flex-shrink-0">
+              <div className="flex items-center gap-2.5 md:gap-3 px-3 py-2 md:px-4 md:py-2.5 rounded-xl md:rounded-2xl bg-muted/40">
+                <div className="p-1.5 md:p-2 rounded-lg md:rounded-xl bg-accent/20 flex-shrink-0">
                   <Calendar className={`${iconSizes.sm} text-accent-foreground`} />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -105,8 +140,8 @@ export default function JobCard({ job, onSelect }: JobCardProps) {
                   <span className="text-xs md:text-sm font-semibold truncate block">Da {job.startDate}</span>
                 </div>
               </div>
-              <div className="flex items-center gap-2 px-2.5 py-1 md:px-3 md:py-1.5 rounded-lg bg-muted/50">
-                <div className="p-1 md:p-1.5 rounded-md bg-secondary/20 flex-shrink-0">
+              <div className="flex items-center gap-2.5 md:gap-3 px-3 py-2 md:px-4 md:py-2.5 rounded-xl md:rounded-2xl bg-muted/40">
+                <div className="p-1.5 md:p-2 rounded-lg md:rounded-xl bg-secondary/20 flex-shrink-0">
                   <Briefcase className={`${iconSizes.sm} text-secondary-foreground`} />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -160,21 +195,38 @@ export default function JobCard({ job, onSelect }: JobCardProps) {
                   {t("jobCard.email")}
                 </a>
               </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="w-full border-2 border-border bg-card hover:bg-accent rounded-lg md:rounded-xl transition-all duration-300 hover:shadow-lg hover:scale-[1.02] active:scale-95 py-1 md:py-2 text-[10px] md:text-sm"
-                onClick={() => setIsModalOpen(true)}
-                aria-label={`${t("jobCard.details")} für ${job.title}`}
-              >
-                {t("jobCard.details")}
-              </Button>
+              {job.externalUrl ? (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full border-2 border-border bg-card hover:bg-accent rounded-lg md:rounded-xl transition-all duration-300 hover:shadow-lg hover:scale-[1.02] active:scale-95 py-1 md:py-2 text-[10px] md:text-sm"
+                  asChild
+                  aria-label={`${t("jobCard.details")} für ${job.title} auf externer Webseite`}
+                >
+                  <a href={job.externalUrl} target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className={iconSizes.sm} />
+                    {t("jobCard.details")}
+                  </a>
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full border-2 border-border bg-card hover:bg-accent rounded-lg md:rounded-xl transition-all duration-300 hover:shadow-lg hover:scale-[1.02] active:scale-95 py-1 md:py-2 text-[10px] md:text-sm"
+                  onClick={() => setIsModalOpen(true)}
+                  aria-label={`${t("jobCard.details")} für ${job.title}`}
+                >
+                  {t("jobCard.details")}
+                </Button>
+              )}
             </div>
           </div>
         </div>
       </Card>
 
-      <JobDetailModal job={job} isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+      {!job.externalUrl && (
+        <JobDetailModal job={job} isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+      )}
     </>
   )
 }

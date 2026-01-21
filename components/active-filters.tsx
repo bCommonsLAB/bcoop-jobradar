@@ -49,8 +49,10 @@ function FilterChipGroup({ chips, max = 3, onRemove, filterType }: FilterChipGro
     <div className="flex flex-wrap gap-2">
       {visibleChips.map((chip) => {
         const Icon = chip.icon || Sparkles
-        // Arbeitsbereich (Job-Typ) bekommt einen spezifischen Farbton; andere Filter bleiben im bestehenden Primary-Look.
-        const tone = filterType === "jobTypes" ? getJobTypeTone(chip.value) : null
+        // Arbeitsbereich (Job-Typ) bekommt spezifische Farbtöne; Locations und andere Filter bleiben im bestehenden Primary-Look.
+        const tone = filterType === "jobTypes" 
+          ? getJobTypeTone(chip.value) 
+          : null
         return (
           <Badge
             key={chip.value}
@@ -131,10 +133,6 @@ export default function ActiveFilters({ filters, onRemoveFilter, onEditFilters }
   const hasActiveFilters =
     activeJobTypes.length > 0 || filters.timeframe !== "all" || activeLocations.length > 0 || filters.noQualificationRequired
 
-  if (!hasActiveFilters) {
-    return null
-  }
-
   // Filter-Zählung
   // Chips für Gruppen vorbereiten
   const jobTypeChips: FilterChip[] = activeJobTypes.map((jobType) => {
@@ -186,34 +184,37 @@ export default function ActiveFilters({ filters, onRemoveFilter, onEditFilters }
         )}
       </div>
 
-      {/* Toggle Button */}
-      <div className="mb-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setShowDetails(!showDetails)}
-          className="text-primary hover:text-primary/80 hover:bg-primary/10 transition-colors duration-200"
-        >
-          {showDetails ? (
-            <>
-              {t("activeFilters.hideDetails")}
-              <ChevronUp className="w-4 h-4 ml-1" />
-            </>
-          ) : (
-            <>
-              {t("activeFilters.showDetails")}
-              <ChevronDown className="w-4 h-4 ml-1" />
-            </>
-          )}
-        </Button>
-      </div>
+      {/* Toggle Button - nur anzeigen wenn aktive Filter vorhanden sind */}
+      {hasActiveFilters && (
+        <div className="mb-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowDetails(!showDetails)}
+            className="text-primary hover:text-primary/80 hover:bg-primary/10 transition-colors duration-200"
+          >
+            {showDetails ? (
+              <>
+                {t("activeFilters.hideDetails")}
+                <ChevronUp className="w-4 h-4 ml-1" />
+              </>
+            ) : (
+              <>
+                {t("activeFilters.showDetails")}
+                <ChevronDown className="w-4 h-4 ml-1" />
+              </>
+            )}
+          </Button>
+        </div>
+      )}
 
-      {/* Details View (animiert) */}
-      <div
-        className={`overflow-hidden transition-all duration-300 ease-in-out ${
-          showDetails ? "max-h-[1000px] opacity-100" : "max-h-0 opacity-0"
-        }`}
-      >
+      {/* Details View (animiert) - nur anzeigen wenn aktive Filter vorhanden sind */}
+      {hasActiveFilters && (
+        <div
+          className={`overflow-hidden transition-all duration-300 ease-in-out ${
+            showDetails ? "max-h-[1000px] opacity-100" : "max-h-0 opacity-0"
+          }`}
+        >
         <div className="space-y-2 md:space-y-4 pt-2">
           {/* Jobtypen Gruppe */}
           {jobTypeChips.length > 0 && (
@@ -276,6 +277,7 @@ export default function ActiveFilters({ filters, onRemoveFilter, onEditFilters }
           )}
         </div>
       </div>
+      )}
     </div>
   )
 }

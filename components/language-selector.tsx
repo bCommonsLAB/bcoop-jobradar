@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect, useContext } from "react"
-import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Languages, X, Search } from "lucide-react"
 import { LanguageContext } from "./language-provider"
@@ -101,31 +100,20 @@ export function LanguageSelector({ onLanguageSelect, isOpen, onClose, isInitialS
       language.code.toLowerCase().includes(searchQuery.toLowerCase()),
   )
 
-  const handleLanguageSelect = (language: Language) => {
+  const handleLanguageSelect = (e: React.MouseEvent, language: Language) => {
+    e.preventDefault()
+    e.stopPropagation()
     setSelectedLanguage(language)
     setShowMoreLanguagesModal(false)
-    // Bei Modal-Modus sofort anwenden, bei initialer Auswahl auf Continue warten
-    if (!isInitialSelection) {
-      onLanguageSelect(language)
-      if (onClose) {
-        onClose()
-      }
+    // Automatisch weiterleiten, sowohl bei Modal-Modus als auch bei initialer Auswahl
+    onLanguageSelect(language)
+    if (onClose) {
+      onClose()
     }
   }
-
-  const handleContinue = () => {
-    if (selectedLanguage) {
-      onLanguageSelect(selectedLanguage)
-    }
-  }
-
-  // Prüfe, ob die ausgewählte Sprache eine "mehr Sprache" ist (nicht in languages Array)
-  const selectedMoreLanguage = selectedLanguage && !languages.find(l => l.code === selectedLanguage)
-    ? moreLanguages.find(l => l.code === selectedLanguage)
-    : null
 
   const mainContent = (
-    <div className={`max-w-2xl w-full bg-card rounded-3xl shadow-2xl p-8 md:p-16 ${isInitialSelection ? 'border-2 border-border' : ''}`}>
+    <div className={`max-w-2xl w-full bg-card rounded-3xl shadow-lg p-10 md:p-16 lg:p-20 relative z-[102] isolate ${isInitialSelection ? 'border border-border/40' : ''}`}>
       <div className="text-center mb-12">
         <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-3xl mb-6 shadow-lg">
           <Languages className="w-10 h-10 text-white" />
@@ -143,7 +131,7 @@ export function LanguageSelector({ onLanguageSelect, isOpen, onClose, isInitialS
         {languages.map((language) => (
           <button
             key={language.code}
-            onClick={() => handleLanguageSelect(language.code)}
+            onClick={(e) => handleLanguageSelect(e, language.code)}
             className={`w-full p-6 rounded-2xl border-2 transition-all duration-200 flex items-center gap-4 hover:shadow-lg ${
               selectedLanguage === language.code
                 ? "border-teal-500 bg-teal-50 shadow-md"
@@ -162,27 +150,6 @@ export function LanguageSelector({ onLanguageSelect, isOpen, onClose, isInitialS
           </button>
         ))}
 
-        {/* Zeige ausgewählte "mehr Sprache" als Karte oberhalb von "Altre lingue" */}
-        {selectedMoreLanguage && (
-          <button
-            onClick={() => handleLanguageSelect(selectedMoreLanguage.code)}
-            className="w-full p-6 rounded-2xl border-2 border-teal-500 bg-teal-50 shadow-md transition-all duration-200 flex items-center gap-4 hover:shadow-lg"
-          >
-            <span className="text-4xl">{selectedMoreLanguage.flag}</span>
-            <div className="flex-1 text-left">
-              <span className="text-2xl font-semibold text-foreground block">{selectedMoreLanguage.name}</span>
-              <span className="text-sm text-muted-foreground">
-                {selectedMoreLanguage.de} • {selectedMoreLanguage.it} • {selectedMoreLanguage.en}
-              </span>
-            </div>
-            <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center">
-              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-          </button>
-        )}
-
         <button
           onClick={() => setShowMoreLanguagesModal(true)}
           className="w-full p-6 rounded-2xl border-2 border-dashed border-border bg-gray-50 hover:bg-gray-100 hover:border-teal-300 transition-all duration-200 flex items-center gap-4"
@@ -196,17 +163,6 @@ export function LanguageSelector({ onLanguageSelect, isOpen, onClose, isInitialS
           </svg>
         </button>
       </div>
-
-      {isInitialSelection && (
-        <Button
-          size="lg"
-          onClick={handleContinue}
-          disabled={!selectedLanguage}
-          className="w-full bg-gradient-to-r from-teal-500 via-cyan-500 to-teal-600 hover:from-teal-600 hover:via-cyan-600 hover:to-teal-700 text-white px-8 py-8 text-xl font-bold rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          Continua / Weiter / Continue
-        </Button>
-      )}
     </div>
   )
 
@@ -218,7 +174,7 @@ export function LanguageSelector({ onLanguageSelect, isOpen, onClose, isInitialS
           {mainContent}
         </div>
         {showMoreLanguagesModal && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-[200] animate-in fade-in duration-200">
             <div className="bg-card rounded-3xl shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden animate-in zoom-in-95 duration-200 relative">
               {/* Modal Header */}
               <div className="bg-gradient-to-r from-teal-500 via-cyan-500 to-teal-600 p-6 flex items-center justify-between sticky top-0 z-10">
@@ -262,7 +218,7 @@ export function LanguageSelector({ onLanguageSelect, isOpen, onClose, isInitialS
                       return (
                         <button
                           key={language.code}
-                          onClick={() => handleLanguageSelect(language.code)}
+                          onClick={(e) => handleLanguageSelect(e, language.code)}
                           className={`p-5 rounded-2xl border-2 transition-all duration-200 flex flex-col items-start gap-2 hover:shadow-lg relative ${
                             selectedLanguage === language.code
                               ? "border-teal-500 bg-teal-50 shadow-md"
@@ -319,8 +275,8 @@ export function LanguageSelector({ onLanguageSelect, isOpen, onClose, isInitialS
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-        <div className="relative max-w-2xl w-full">
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200" style={{ isolation: 'isolate', transform: 'translateZ(0)' }}>
+        <div className="relative max-w-2xl w-full z-[101] overflow-visible" style={{ transform: 'translateZ(0)' }}>
           {mainContent}
           {onClose && (
             <button
@@ -333,7 +289,7 @@ export function LanguageSelector({ onLanguageSelect, isOpen, onClose, isInitialS
         </div>
       </div>
       {showMoreLanguagesModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-[60] animate-in fade-in duration-200">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-[110] animate-in fade-in duration-200">
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden animate-in zoom-in-95 duration-200 relative">
             {/* Modal Header */}
             <div className="bg-gradient-to-r from-teal-500 via-cyan-500 to-teal-600 p-6 flex items-center justify-between sticky top-0 z-10">
@@ -377,7 +333,7 @@ export function LanguageSelector({ onLanguageSelect, isOpen, onClose, isInitialS
                     return (
                       <button
                         key={language.code}
-                        onClick={() => handleLanguageSelect(language.code)}
+                        onClick={(e) => handleLanguageSelect(e, language.code)}
                         className={`p-5 rounded-2xl border-2 transition-all duration-200 flex flex-col items-start gap-2 hover:shadow-lg relative ${
                           selectedLanguage === language.code
                             ? "border-teal-500 bg-teal-50 shadow-md"
