@@ -10,7 +10,7 @@ import { Progress } from "@/components/ui/progress"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { importJobFromUrl, SecretaryServiceError } from "@/lib/secretary/client"
 import { parseBatchJobList, type JobLink } from "@/lib/job-import/parse"
-import { mapStructuredDataToJob } from "@/lib/job-import/mapper"
+import { mapStructuredDataToJob, type StructuredJobData } from "@/lib/job-import/mapper"
 
 interface BatchImportTabProps {
   onJobsCreated?: (jobData: unknown) => void
@@ -136,7 +136,9 @@ export default function BatchImportTab({ onJobsCreated }: BatchImportTabProps) {
         })
 
         if (response.status === "success" && response.data?.structured_data) {
-          const structuredData = response.data.structured_data
+          const structuredData = response.data.structured_data as StructuredJobData
+          // URL zur structured_data hinzufügen (für Deduplizierung und Quellenangabe)
+          structuredData.url = jobLink.url
           const jobData = mapStructuredDataToJob(structuredData)
 
           const createResponse = await fetch("/api/jobs", {

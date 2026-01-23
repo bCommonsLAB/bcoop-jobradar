@@ -52,8 +52,15 @@ export async function POST(request: NextRequest) {
     // Secretary-Konfiguration holen
     const { baseUrl, apiKey } = getSecretaryConfig()
 
+    console.log('[API] Secretary-Konfiguration:', {
+      baseUrl,
+      hasApiKey: !!apiKey,
+      apiKeyLength: apiKey?.length || 0,
+    })
+
     // Template-URL zusammenbauen
     const templateUrl = `${baseUrl}/transformer/template`
+    console.log('[API] Template-URL:', templateUrl)
 
     // Template-Inhalt laden (serverseitig aus templates/)
     // Falls template_content bereits gesetzt ist, verwenden wir das
@@ -66,8 +73,10 @@ export async function POST(request: NextRequest) {
       try {
         if (templateName === 'ExtractJobDataFromWebsite') {
           templateContent = loadJobDataTemplate()
+          console.log('[API] Template geladen:', templateName, 'Größe:', templateContent.length, 'Zeichen')
         } else if (templateName === 'ExtractJobListFromWebsite') {
           templateContent = loadJobListTemplate()
+          console.log('[API] Template geladen:', templateName, 'Größe:', templateContent.length, 'Zeichen')
         }
       } catch (error) {
         console.warn(
@@ -78,6 +87,16 @@ export async function POST(request: NextRequest) {
         // und lassen den Secretary Service das Template selbst laden
       }
     }
+
+    console.log('[API] Sende Request an Secretary Service:', {
+      url: body.url.trim(),
+      templateUrl,
+      templateName,
+      hasTemplateContent: !!templateContent,
+      sourceLanguage: body.source_language || 'en',
+      targetLanguage: body.target_language || 'en',
+      timeoutMs: 120000, // Erhöht auf 120 Sekunden
+    })
 
     // Adapter aufrufen
     const response = await callTemplateExtractFromUrl({
@@ -90,7 +109,13 @@ export async function POST(request: NextRequest) {
       useCache: body.use_cache ?? false,
       containerSelector: body.container_selector,
       apiKey,
-      timeoutMs: 60000, // 60 Sekunden Timeout
+      timeoutMs: 120000, // 120 Sekunden Timeout (LLM-Verarbeitung kann länger dauern)
+    })
+
+    console.log('[API] Response erhalten:', {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok,
     })
 
     // Response weiterreichen
@@ -143,13 +168,19 @@ export async function POST(request: NextRequest) {
     }
 
     if (error instanceof TimeoutError) {
+      console.error('[API] Timeout-Fehler:', {
+        message: error.message,
+        templateUrl: `${getSecretaryConfig().baseUrl}/transformer/template`,
+        hint: 'Prüfe ob Secretary Service läuft und erreichbar ist',
+      })
       return NextResponse.json(
         {
           status: 'error',
-          message: 'Request timeout - Secretary Service antwortet nicht rechtzeitig',
+          message: 'Request timeout - Secretary Service antwortet nicht rechtzeitig (nach 120 Sekunden). Bitte prüfe ob der Service läuft.',
           error: {
             code: 'TIMEOUT',
             message: error.message,
+            hint: 'Stelle sicher, dass SECRETARY_SERVICE_URL korrekt gesetzt ist und der Service erreichbar ist.',
           },
         },
         { status: 504 }

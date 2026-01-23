@@ -56,6 +56,9 @@ export interface Job {
   salary?: string
   tasks?: string[]
   offers?: string[]
+
+  // Quellen-URL (für Import-Tracking und Deduplizierung)
+  sourceUrl?: string
 }
 
 /**

@@ -66,6 +66,8 @@ export default function SingleImportTab({ onJobCreated }: SingleImportTabProps) 
 
       if (response.status === "success" && response.data?.structured_data) {
         const structuredData = response.data.structured_data as StructuredJobData
+        // URL zur structured_data hinzufügen (für Deduplizierung und Quellenangabe)
+        structuredData.url = url
         setImportedData(structuredData)
         setSuccess(
           "Job-Daten erfolgreich extrahiert! Überprüfen Sie die Vorschau und bestätigen Sie die Erstellung."

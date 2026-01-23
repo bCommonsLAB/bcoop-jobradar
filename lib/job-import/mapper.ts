@@ -306,6 +306,9 @@ export function mapStructuredDataToJob(data: StructuredJobData): JobCreateInput 
     salaryMin: toNumber(data.salaryMin),
     salaryMax: toNumber(data.salaryMax),
     numberOfPositions: toNumber(data.numberOfPositions),
+
+    // Quellen-URL (für Import-Tracking und Deduplizierung)
+    sourceUrl: data.url?.trim(),
   }
 
   // Leere Arrays entfernen (für sauberes JSON)

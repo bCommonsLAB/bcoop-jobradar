@@ -86,6 +86,14 @@ export async function callTemplateExtractFromUrl(
   }
 
   try {
+    console.log('[Secretary Adapter] Sende Request:', {
+      templateUrl: p.templateUrl,
+      url: p.url,
+      hasTemplateContent: !!p.templateContent,
+      template: p.template,
+      timeoutMs: p.timeoutMs,
+    })
+
     const res = await fetchWithTimeout(p.templateUrl, {
       method: 'POST',
       body: formData.toString(),
@@ -93,10 +101,22 @@ export async function callTemplateExtractFromUrl(
       timeoutMs: p.timeoutMs,
     })
 
+    console.log('[Secretary Adapter] Response erhalten:', {
+      status: res.status,
+      statusText: res.statusText,
+      ok: res.ok,
+    })
+
     // HTTP-Fehler werden hier nicht geworfen, sondern als Response zurückgegeben
     // Der Caller kann dann res.ok prüfen und selbst entscheiden
     return res
   } catch (e) {
+    console.error('[Secretary Adapter] Fehler:', {
+      error: e instanceof Error ? e.message : String(e),
+      errorType: e instanceof Error ? e.constructor.name : typeof e,
+      templateUrl: p.templateUrl,
+    })
+
     // Spezifische Fehler weiterwerfen
     if (e instanceof HttpError || e instanceof TimeoutError || e instanceof NetworkError) {
       throw e

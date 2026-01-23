@@ -13,6 +13,7 @@ import {
   PhoneIcon,
   CheckCircle2,
   AlertCircle,
+  ExternalLink,
 } from "lucide-react"
 import { useTranslation } from "@/hooks/use-translation"
 
@@ -51,6 +52,7 @@ interface Job {
   salaryMin?: number
   salaryMax?: number
   numberOfPositions?: number
+  sourceUrl?: string
 }
 
 interface JobDetailModalProps {
@@ -322,6 +324,25 @@ export default function JobDetailModal({ job, isOpen, onClose }: JobDetailModalP
           >
             {t("jobModal.apply")}
           </Button>
+
+          {/* Quellen-URL (Quellenangabe) - unter dem Apply Button */}
+          {job.sourceUrl && (
+            <div className="bg-muted/30 rounded-2xl p-4 border border-border/50">
+              <div className="flex items-center gap-2 mb-2">
+                <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                <h3 className="font-semibold text-sm text-muted-foreground">Quelle</h3>
+              </div>
+              <a
+                href={job.sourceUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-primary hover:underline break-all flex items-center gap-1"
+              >
+                <ExternalLink className="h-3 w-3 flex-shrink-0" />
+                <span className="break-all">{job.sourceUrl}</span>
+              </a>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

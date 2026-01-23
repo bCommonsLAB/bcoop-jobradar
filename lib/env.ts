@@ -25,3 +25,19 @@ export function getSecretaryConfig(): { baseUrl: string; apiKey: string } {
 
   return { baseUrl: baseUrl.trim(), apiKey: apiKey.trim() }
 }
+
+/**
+ * Admin-Passwort aus ENV-Variablen
+ * 
+ * @returns Admin-Passwort
+ * @throws Error wenn ADMIN_PASSWORD nicht definiert ist
+ */
+export function getAdminPassword(): string {
+  const password = process.env.ADMIN_PASSWORD
+
+  if (!password || password.trim().length === 0) {
+    throw new Error('ADMIN_PASSWORD ist nicht definiert oder leer.')
+  }
+
+  return password.trim()
+}

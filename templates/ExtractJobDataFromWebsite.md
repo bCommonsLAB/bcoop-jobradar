@@ -8,13 +8,13 @@ startDate: {{startDate|Start date in format DD.MM.YYYY or "subito" if immediate 
 jobType: {{jobType|Job type: one of "dishwasher", "kitchen", "housekeeping", "helper", "service". Infer from title/description if not explicitly stated.}}
 phone: {{phone|Contact phone number exactly as shown.}}
 email: {{email|Contact email address exactly as shown.}}
-description: {{description|Job description verbatim. Do not paraphrase or summarize.}}
+description: {{description|Job description verbatim. Do summarize in 50 words.}}
 hasAccommodation: {{hasAccommodation|Boolean: true if accommodation is provided, false otherwise.}}
 hasMeals: {{hasMeals|Boolean: true if meals are provided, false otherwise.}}
 companyDescription: {{companyDescription|Company description verbatim; leave empty if none.}}
 companyWebsite: {{companyWebsite|Company website URL; leave empty if none.}}
 companyAddress: {{companyAddress|Company address exactly as shown; leave empty if none.}}
-fullDescription: {{fullDescription|Full detailed job description verbatim; leave empty if none.}}
+fullDescription: {{fullDescription|Full detailed job description verbatim (max. 50 words); leave empty if none.}}
 requirements: {{requirements|Comma-separated list of job requirements; leave empty if none.}}
 benefits: {{benefits|Comma-separated list of benefits; leave empty if none.}}
 contractType: {{contractType|Contract type exactly as published; leave empty if none.}}

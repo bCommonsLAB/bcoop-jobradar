@@ -136,15 +136,15 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Jobs erstellen
+    // Jobs erstellen oder aktualisieren
     const jobIds = await repository.createJobs(body.jobs)
 
-    console.log('[API] POST /api/jobs - Jobs erstellt:', jobIds)
+    console.log('[API] POST /api/jobs - Jobs verarbeitet:', jobIds)
 
     return NextResponse.json(
       {
         status: 'success',
-        message: `${jobIds.length} Jobs erfolgreich erstellt`,
+        message: `${jobIds.length} Jobs erfolgreich verarbeitet`,
         data: { jobIds },
       },
       { status: 201 }
@@ -155,6 +155,59 @@ export async function POST(request: NextRequest) {
       {
         status: 'error',
         message: `Fehler beim Erstellen der Jobs: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`,
+      },
+      { status: 500 }
+    )
+  }
+}
+
+/**
+ * DELETE /api/jobs
+ * Löscht einen oder mehrere Jobs
+ */
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const jobId = searchParams.get('id')
+    const body = await request.json().catch(() => ({}))
+    const jobIds = body.jobIds || (jobId ? [jobId] : [])
+
+    if (!Array.isArray(jobIds) || jobIds.length === 0) {
+      return NextResponse.json(
+        { status: 'error', message: 'Keine Job-IDs angegeben' },
+        { status: 400 }
+      )
+    }
+
+    // Validierung: Alle IDs müssen Strings sein
+    for (const id of jobIds) {
+      if (typeof id !== 'string' || id.trim().length === 0) {
+        return NextResponse.json(
+          { status: 'error', message: 'Ungültige Job-ID gefunden' },
+          { status: 400 }
+        )
+      }
+    }
+
+    // Jobs löschen
+    const deletedCount = await repository.deleteJobs(jobIds)
+
+    console.log(`[API] DELETE /api/jobs - ${deletedCount} Jobs gelöscht`)
+
+    return NextResponse.json(
+      {
+        status: 'success',
+        message: `${deletedCount} Jobs erfolgreich gelöscht`,
+        data: { deletedCount },
+      },
+      { status: 200 }
+    )
+  } catch (error) {
+    console.error('Fehler beim Löschen der Jobs:', error)
+    return NextResponse.json(
+      {
+        status: 'error',
+        message: `Fehler beim Löschen der Jobs: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`,
       },
       { status: 500 }
     )
