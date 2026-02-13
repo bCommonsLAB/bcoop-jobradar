@@ -1,0 +1,95 @@
+name: ci-main
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'main'
+
+permissions:
+  contents: write
+  packages: write
+  actions: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: prod
+    name: CI Prod
+    outputs:
+      version: ${{ steps.read_version.outputs.VERSION }}
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.CI_PAT }}
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          # Cache wird nicht benötigt, da der Build komplett im Docker-Container läuft
+          # Dependencies werden im Container installiert, nicht auf dem Runner
+
+      - name: read version file
+        id: read_version
+        run: |
+          VERSION=$(cat VERSION)
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: bump version
+        id: bump
+        uses: cbrgm/semver-bump-action@main
+        with:
+          current-version: ${{steps.read_version.outputs.VERSION}}
+          bump-level: patch
+
+      - name: write version file
+        run: echo "${{ steps.bump.outputs.new_version }}" > VERSION
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/bcommonslab/bcoop-jobradar:latest,ghcr.io/bcommonslab/bcoop-jobradar:${{ steps.bump.outputs.new_version }}
+          build-args: |
+            MONGODB_URI=${{ secrets.MONGODB_URI }}
+            MONGODB_DATABASE_NAME=${{ secrets.MONGODB_DATABASE_NAME }}
+            MONGODB_COLLECTION_NAME=${{ secrets.MONGODB_COLLECTION_NAME }}
+            SECRETARY_SERVICE_URL=${{ secrets.SECRETARY_SERVICE_URL }}
+            SECRETARY_SERVICE_API_KEY=${{ secrets.SECRETARY_SERVICE_API_KEY }}
+            ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}
+            
+      - name: Push version and tag
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email github-actions[bot]@users.noreply.github.com
+          git remote set-url origin https://${{ secrets.CI_PAT }}@github.com/${{ github.repository }}.git
+          git add VERSION
+          git commit -m "Bump version to ${{ steps.bump.outputs.new_version }} [skip ci]"
+          git tag -a -m "${{ steps.bump.outputs.new_version }}" v${{ steps.bump.outputs.new_version }}
+          git push --follow-tags
+          
+      - name: Publish Release
+        uses: softprops/action-gh-release@v2
+        with:
+          prerelease: false
+          generate_release_notes: true
+          tag_name: v${{ steps.bump.outputs.new_version }}
+      # Dokploy-URL anpassen: In Dokploy unter Projekt → API die Deploy-URL kopieren
+      - name: Trigger deployment
+        run: curl -X GET ${{ secrets.DOKPLOY_DEPLOY_URL }}
+
+

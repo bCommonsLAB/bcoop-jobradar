@@ -26,6 +26,7 @@ todos:
   - id: quality-checks
     content: Lint + Tests ausführen und berichten
     status: completed
+isProject: false
 ---
 
 ## Überlegungen
@@ -38,24 +39,25 @@ Die Template‑Namen sind Annahmen. Wir dokumentieren sie explizit und kapseln s
 
 ## Vorgehen
 
-- Dokumentation der Entscheidung und Risiken in `docs/` schreiben (Variante B, Template‑Annahmen, Pflichtfelder, Fallbacks). Ausgangspunkt: [`docs/Job Scraper/website-import-session-feature-map.md`](docs/Job%20Scraper/website-import-session-feature-map.md).
+- Dokumentation der Entscheidung und Risiken in `docs/` schreiben (Variante B, Template‑Annahmen, Pflichtfelder, Fallbacks). Ausgangspunkt: `[docs/Job Scraper/website-import-session-feature-map.md](docs/Job%20Scraper/website-import-session-feature-map.md)`.
 - Secretary‑Integration hinzufügen (minimal):
-- Neue env‑Helper `getSecretaryConfig()` in [`lib/env.ts`](lib/env.ts).
-- Timeout‑Fetch und Fehlerklassen in [`lib/utils/fetch-with-timeout.ts`](lib/utils/fetch-with-timeout.ts).
-- Minimaler Adapter `callTemplateExtractFromUrl()` in [`lib/secretary/adapter.ts`](lib/secretary/adapter.ts).
-- Client‑Funktion `importJobFromUrl()` + `SecretaryServiceError` in [`lib/secretary/client.ts`](lib/secretary/client.ts).
-- API‑Proxy [`app/api/secretary/import-from-url/route.ts`](app/api/secretary/import-from-url/route.ts) (Form‑encoded → Secretary Service).
+- Neue env‑Helper `getSecretaryConfig()` in `[lib/env.ts](lib/env.ts)`.
+- Timeout‑Fetch und Fehlerklassen in `[lib/utils/fetch-with-timeout.ts](lib/utils/fetch-with-timeout.ts)`.
+- Minimaler Adapter `callTemplateExtractFromUrl()` in `[lib/secretary/adapter.ts](lib/secretary/adapter.ts)`.
+- Client‑Funktion `importJobFromUrl()` + `SecretaryServiceError` in `[lib/secretary/client.ts](lib/secretary/client.ts)`.
+- API‑Proxy `[app/api/secretary/import-from-url/route.ts](app/api/secretary/import-from-url/route.ts)` (Form‑encoded → Secretary Service).
 - Job‑Import‑Mapping implementieren:
-- Neues Mapping‑Modul (z.B. [`lib/job-import/mapper.ts`](lib/job-import/mapper.ts)), das `structured_data` in ein `JobCreateInput` mappt, Pflichtfelder validiert und Defaults dokumentiert.
-- Parser für Batch‑Listen (Array, `{ items }`, `{ jobs }`/`{ sessions }`) in [`lib/job-import/parse.ts`](lib/job-import/parse.ts).
-- Job‑Create‑Typ ergänzen (z.B. `JobCreateRequest` in [`lib/job.ts`](lib/job.ts)), ohne bestehende Typen zu destabilisieren.
+- Neues Mapping‑Modul (z.B. `[lib/job-import/mapper.ts](lib/job-import/mapper.ts)`), das `structured_data` in ein `JobCreateInput` mappt, Pflichtfelder validiert und Defaults dokumentiert.
+- Parser für Batch‑Listen (Array, `{ items }`, `{ jobs }`/`{ sessions }`) in `[lib/job-import/parse.ts](lib/job-import/parse.ts)`.
+- Job‑Create‑Typ ergänzen (z.B. `JobCreateRequest` in `[lib/job.ts](lib/job.ts)`), ohne bestehende Typen zu destabilisieren.
 - Jobs API erweitern:
-- [`app/api/jobs/route.ts`](app/api/jobs/route.ts) um `POST` erweitern (Validierung, Bulk‑Insert, Rückgabe). Option: kleines Repository [`lib/job-repository.ts`](lib/job-repository.ts) analog zu Session‑Repo, aber schlank.
+- `[app/api/jobs/route.ts](app/api/jobs/route.ts)` um `POST` erweitern (Validierung, Bulk‑Insert, Rückgabe). Option: kleines Repository `[lib/job-repository.ts](lib/job-repository.ts)` analog zu Session‑Repo, aber schlank.
 - Admin‑Import‑UI bauen:
-- Neue Admin‑Seite [`app/admin/import/page.tsx`](app/admin/import/page.tsx) mit Button/Modal.
-- UI als kleine Komponenten unter [`components/job-import/`](components/job-import/) (Single‑Import, Batch‑Import, Statusliste). Größe pro Datei <200 Zeilen.
+- Neue Admin‑Seite `[app/admin/import/page.tsx](app/admin/import/page.tsx)` mit Button/Modal.
+- UI als kleine Komponenten unter `[components/job-import/](components/job-import/)` (Single‑Import, Batch‑Import, Statusliste). Größe pro Datei <200 Zeilen.
 - UI zeigt Extrakt‑Vorschau und blockiert Speichern, wenn Pflichtfelder fehlen; ermöglicht einfache Korrektur.
 - Tests:
-- Unit‑Tests für Mapping + Batch‑Parser (z.B. [`lib/job-import/mapper.test.ts`](lib/job-import/mapper.test.ts) und [`lib/job-import/parse.test.ts`](lib/job-import/parse.test.ts)), inkl. Pflichtfeld‑Validierung und Default‑Fallbacks.
+- Unit‑Tests für Mapping + Batch‑Parser (z.B. `[lib/job-import/mapper.test.ts](lib/job-import/mapper.test.ts)` und `[lib/job-import/parse.test.ts](lib/job-import/parse.test.ts)`), inkl. Pflichtfeld‑Validierung und Default‑Fallbacks.
 - Qualitätssicherung:
 - Lint‑Check der geänderten Dateien, danach Tests laufen lassen und Ergebnisse berichten.
+
