@@ -79,6 +79,8 @@ jobs:
           git remote set-url origin https://${{ secrets.CI_PAT }}@github.com/${{ github.repository }}.git
           git add VERSION
           git commit -m "Bump version to ${{ steps.bump.outputs.new_version }} [skip ci]"
+          git fetch origin main
+          git rebase origin/main
           git tag -a -m "${{ steps.bump.outputs.new_version }}" v${{ steps.bump.outputs.new_version }}
           git push --follow-tags
           

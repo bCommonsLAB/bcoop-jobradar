@@ -1,0 +1,23 @@
+# Composerfile für bcoop-jobradar (Dokploy)
+# Anpassen: Service-Namen, Ports, Umgebungsvariablen mit echten Werten
+
+services:
+  bcoop-jobradar:
+    image: ghcr.io/bcommonslab/bcoop-jobradar:latest
+    pull_policy: always
+    restart: always
+    networks:
+      - dokploy-network
+    ports:
+      - 3000
+    environment:
+      - MONGODB_URI=mongodb+srv://...
+      - MONGODB_DATABASE_NAME=bcoop
+      - MONGODB_COLLECTION_NAME=bcoop-jobradar
+      - SECRETARY_SERVICE_URL=https://secretaryservices.bcommonslab.org/api
+      - SECRETARY_SERVICE_API_KEY=mPE...
+      - ADMIN_PASSWORD=...
+
+networks:
+  dokploy-network:
+    external: true
