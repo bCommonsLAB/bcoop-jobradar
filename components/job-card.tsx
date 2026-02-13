@@ -6,26 +6,11 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Phone, Mail, MapPin, Calendar, Home, Utensils, Briefcase, ExternalLink, Heart } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
-import JobDetailModal from "./job-detail-modal"
 import { useTranslation } from "@/hooks/use-translation"
 import { iconSizes } from "@/lib/icon-sizes"
 import { isJobLiked, toggleLike } from "@/lib/liked-jobs"
 import { cn } from "@/lib/utils"
-
-interface Job {
-  id: string
-  title: string
-  company: string
-  location: string
-  employmentType: string
-  startDate: string
-  hasAccommodation: boolean
-  hasMeals: boolean
-  phone: string
-  email: string
-  description: string
-  externalUrl?: string // URL zur externen Job-Webseite, falls der Job von einer anderen Plattform stammt
-}
+import type { Job } from "@/lib/job"
 
 interface JobCardProps {
   job: Job
@@ -33,7 +18,6 @@ interface JobCardProps {
 }
 
 export default function JobCard({ job, onSelect }: JobCardProps) {
-  const [isModalOpen, setIsModalOpen] = useState(false)
   const [isLiked, setIsLiked] = useState(false)
   const { t } = useTranslation()
 
@@ -71,8 +55,7 @@ export default function JobCard({ job, onSelect }: JobCardProps) {
   }
 
   return (
-    <>
-      <Card className={cn(
+    <Card className={cn(
         "relative bg-card border border-border/35 shadow-sm hover:shadow-md transition-all duration-300 rounded-xl md:rounded-2xl lg:rounded-3xl overflow-hidden group hover:-translate-y-0.5 h-full flex flex-col focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2",
         isLiked && "border-t-4 border-t-primary"
       )}>
@@ -195,38 +178,23 @@ export default function JobCard({ job, onSelect }: JobCardProps) {
                   {t("jobCard.email")}
                 </a>
               </Button>
-              {job.externalUrl ? (
+              {job.sourceUrl && (
                 <Button
                   size="sm"
                   variant="outline"
                   className="w-full border-2 border-border bg-card hover:bg-accent rounded-lg md:rounded-xl transition-all duration-300 hover:shadow-lg hover:scale-[1.02] active:scale-95 py-1 md:py-2 text-[10px] md:text-sm"
                   asChild
-                  aria-label={`${t("jobCard.details")} für ${job.title} auf externer Webseite`}
+                  aria-label={`${t("jobCard.details")} für ${job.title} auf Quellseite`}
                 >
-                  <a href={job.externalUrl} target="_blank" rel="noopener noreferrer">
+                  <a href={job.sourceUrl} target="_blank" rel="noopener noreferrer">
                     <ExternalLink className={iconSizes.sm} />
                     {t("jobCard.details")}
                   </a>
-                </Button>
-              ) : (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="w-full border-2 border-border bg-card hover:bg-accent rounded-lg md:rounded-xl transition-all duration-300 hover:shadow-lg hover:scale-[1.02] active:scale-95 py-1 md:py-2 text-[10px] md:text-sm"
-                  onClick={() => setIsModalOpen(true)}
-                  aria-label={`${t("jobCard.details")} für ${job.title}`}
-                >
-                  {t("jobCard.details")}
                 </Button>
               )}
             </div>
           </div>
         </div>
-      </Card>
-
-      {!job.externalUrl && (
-        <JobDetailModal job={job} isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
-      )}
-    </>
+    </Card>
   )
 }
