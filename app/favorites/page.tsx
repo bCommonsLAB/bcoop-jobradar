@@ -78,7 +78,7 @@ function FavoritesPageContent() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-accent/10 to-accent/20">
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-background via-accent/10 to-accent/20">
       <header className="relative bg-gradient-to-br from-teal-500 via-teal-400 via-cyan-500 via-cyan-400 to-teal-600 text-white py-2 md:py-5 lg:py-6 px-3 md:px-6 lg:px-8 shadow-lg overflow-hidden">
         {/* Hintergrundbild */}
         <div className="absolute inset-0 z-0">
@@ -202,7 +202,7 @@ function FavoritesPageContent() {
         )}
       </div>
 
-      <footer className="bg-white border-t border-border py-2 md:py-5 px-2 md:px-4 mt-2 md:mt-6">
+      <footer className="bg-white border-t border-border py-2 md:py-5 px-2 md:px-4 mt-auto">
         <div className="max-w-6xl mx-auto text-center">
           <p className="text-xs md:text-base text-muted-foreground">{t("welcome.footer")}</p>
           <div className="mt-2 md:mt-4">

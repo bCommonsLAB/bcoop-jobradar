@@ -98,6 +98,11 @@ export default function ActiveFilters({ filters, onRemoveFilter, onEditFilters }
   const { t } = useTranslation()
   const [showDetails, setShowDetails] = useState(false)
   
+  // Sicherheitsprüfung für filters
+  if (!filters || !filters.jobTypes || !filters.locations || !filters.timeframe) {
+    return null
+  }
+  
   // Mapping für Job-Typen
   const jobTypeLabels: Record<string, { label: string; icon: typeof ChefHat }> = {
     all: { label: t("jobTypes.all"), icon: Sparkles },
@@ -128,10 +133,15 @@ export default function ActiveFilters({ filters, onRemoveFilter, onEditFilters }
   }
 
   // Filter aktiv
-  const activeJobTypes = filters.jobTypes.filter((t) => t !== "all")
-  const activeLocations = filters.locations.filter((l) => l !== "all")
+  // Wenn nur "all" vorhanden ist, wird es als aktiver Filter behandelt
+  const activeJobTypes = filters.jobTypes.length === 1 && filters.jobTypes[0] === "all" 
+    ? ["all"] 
+    : filters.jobTypes.filter((t) => t !== "all")
+  const activeLocations = filters.locations.length === 1 && filters.locations[0] === "all"
+    ? ["all"]
+    : filters.locations.filter((l) => l !== "all")
   const hasActiveFilters =
-    activeJobTypes.length > 0 || filters.timeframe !== "all" || activeLocations.length > 0 || filters.noQualificationRequired
+    activeJobTypes.length > 0 || (filters.timeframe && filters.timeframe.length > 0) || activeLocations.length > 0 || filters.noQualificationRequired
 
   // Filter-Zählung
   // Chips für Gruppen vorbereiten
@@ -144,7 +154,7 @@ export default function ActiveFilters({ filters, onRemoveFilter, onEditFilters }
     }
   })
 
-  const timeframeChips: FilterChip[] = filters.timeframe !== "all" ? [{
+  const timeframeChips: FilterChip[] = filters.timeframe && filters.timeframe.length > 0 ? [{
     label: timeframeLabels[filters.timeframe] || filters.timeframe,
     value: filters.timeframe,
     icon: Calendar,
