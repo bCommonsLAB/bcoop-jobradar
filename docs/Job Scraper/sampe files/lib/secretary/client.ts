@@ -1,0 +1,1218 @@
+/**
+ * @fileoverview Secretary Service Client - HTTP Client for Secretary Service API
+ * 
+ * @description
+ * HTTP client for communicating with the Secretary Service. Provides methods for
+ * processing PDFs, audio, video, images, and sessions. Handles authentication,
+ * request formatting, response parsing, and error handling. Supports streaming
+ * responses and callback URL configuration.
+ * 
+ * @module secretary
+ * 
+ * @exports
+ * - SecretaryServiceClient: Main client class for Secretary Service API
+ * - SecretaryServiceError: Error class for Secretary Service errors
+ * - SecretaryAudioResponse: Interface for audio processing responses
+ * - SecretaryVideoResponse: Interface for video processing responses
+ * - SecretaryImageResponse: Interface for image processing responses
+ * - SecretaryPdfResponse: Interface for PDF processing responses
+ * 
+ * @usedIn
+ * - src/app/api/secretary: Secretary API routes use client
+ * - src/lib/external-jobs: External jobs use client for processing
+ * 
+ * @dependencies
+ * - @/lib/utils/fetch-with-timeout: Timeout-aware fetch utility
+ * - @/lib/env: Environment helpers for Secretary config
+ * - @/lib/secretary/types: Secretary type definitions
+ */
+
+import { 
+  TemplateExtractionResponse,
+  SecretaryRagResponse 
+} from './types';
+import { getSecretaryConfig } from '@/lib/env';
+import { fetchWithTimeout } from '@/lib/utils/fetch-with-timeout';
+
+export class SecretaryServiceError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'SecretaryServiceError';
+  }
+}
+
+/**
+ * Typ für die Secretary Service Audio Response
+ */
+export interface SecretaryAudioResponse {
+  status: string;
+  request?: {
+    processor: string;
+    timestamp: string;
+    parameters: {
+      audio_source: string;
+      source_info: {
+        original_filename: string;
+        file_size: number;
+        file_type: string;
+        file_ext: string;
+      };
+      source_language: string;
+      target_language: string;
+      template: string;
+      use_cache: boolean;
+    };
+  };
+  process?: {
+    id: string;
+    main_processor: string;
+    started: string;
+    sub_processors: string[];
+    completed: string | null;
+    duration: number | null;
+    is_from_cache: boolean;
+    cache_key: string;
+    llm_info?: {
+      requests: Array<{
+        model: string;
+        purpose: string;
+        tokens: number;
+        duration: number;
+        processor: string;
+        timestamp: string;
+      }>;
+      requests_count: number;
+      total_tokens: number;
+      total_duration: number;
+    };
+  };
+  error: unknown | null;
+  data: {
+    transcription: {
+      text: string;
+      source_language: string;
+      segments: unknown[];
+    };
+    metadata?: {
+      title: string;
+      duration: number;
+      format: string;
+      channels: number;
+      sample_rate: number;
+      bit_rate: number;
+      process_dir: string;
+      chapters: unknown[];
+    };
+    process_id: string;
+    transformation_result: unknown | null;
+    status: string;
+  };
+}
+
+/**
+ * Typ für die Secretary Service Video Response
+ */
+export interface SecretaryVideoResponse {
+  status: string;
+  request?: {
+    processor: string;
+    timestamp: string;
+    parameters: {
+      source: {
+        url: string | null;
+        file_name: string;
+        file_size: number;
+        upload_timestamp: string;
+      };
+      source_language: string;
+      target_language: string;
+      template: string | null;
+      use_cache: boolean;
+    };
+  };
+  process?: {
+    id: string;
+    main_processor: string;
+    started: string;
+    sub_processors: string[];
+    completed: string | null;
+    duration: number | null;
+    is_from_cache: boolean;
+    cache_key: string;
+    llm_info?: {
+      requests: Array<{
+        model: string;
+        purpose: string;
+        tokens: number;
+        duration: number;
+        processor: string;
+        timestamp: string;
+      }>;
+      requests_count: number;
+      total_tokens: number;
+      total_duration: number;
+    };
+  };
+  error: unknown | null;
+  data: {
+    metadata: {
+      title: string;
+      source: {
+        url: string | null;
+        file_name: string;
+        file_size: number;
+        upload_timestamp: string;
+      };
+      duration: number;
+      duration_formatted: string;
+      file_size: number;
+      process_dir: string;
+      audio_file: string;
+      video_id: string | null;
+    };
+    process_id: string;
+    audio_result: unknown | null;
+    transcription: {
+      text: string;
+      source_language: string;
+      segments: unknown[];
+    };
+  };
+}
+
+/**
+ * Typ für die Secretary Service PDF Response
+ */
+export interface SecretaryPdfResponse {
+  status: string;
+  request?: {
+    processor: string;
+    timestamp: string;
+    parameters: {
+      file_path: string;
+      template: string | null;
+      context: string | null;
+      extraction_method: string;
+    };
+  };
+  process?: {
+    id: string;
+    main_processor: string;
+    started: string;
+    sub_processors: string[];
+    completed: string | null;
+    duration: number | null;
+    is_from_cache: boolean;
+    cache_key: string;
+    llm_info?: {
+      requests: Array<{
+        model: string;
+        purpose: string;
+        tokens: number;
+        duration: number;
+        processor: string;
+        timestamp: string;
+      }>;
+      requests_count: number;
+      total_tokens: number;
+      total_duration: number;
+    };
+  };
+  error: unknown | null;
+  data: {
+    extracted_text: string;  // ← Geändert von text_content zu extracted_text
+    ocr_text: string | null;
+    metadata: {
+      file_name: string;
+      file_size: number;
+      page_count: number;
+      format: string;
+      process_dir: string;
+      image_paths: string[];
+      preview_paths: string[];
+      preview_zip: string | null;
+      text_paths: string[];
+      original_text_paths: string[];
+      text_contents: Array<{
+        page: number;
+        content: string;
+      }>;
+      extraction_method: string;
+    };
+    process_id: string;
+    processed_at: string;
+    // Neu: Link statt großer Base64-Blobs
+    images_archive_url?: string;
+    // Alt (deprecated): verbleibt für Abwärtskompatibilität
+    images_archive_data?: string; 
+    images_archive_filename?: string; 
+    // Neu: Rohdaten der Mistral-OCR-Ausgabe mit Seitenstruktur
+    mistral_ocr_raw?: {
+      pages: Array<{
+        index: number;
+        markdown: string;
+        images: Array<{
+          id: string;
+          top_left_x: number;
+          top_left_y: number;
+          bottom_right_x: number;
+          bottom_right_y: number;
+          image_base64: string | null;
+          image_annotation: string | null;
+        }>;
+        dimensions: {
+          dpi: number;
+          height: number;
+          width: number;
+        };
+      }>;
+    };
+  };
+}
+
+/**
+ * Transformiert eine Audio-Datei mithilfe des Secretary Services in Text
+ * 
+ * @param file Die zu transformierende Audio-Datei 
+ * @param targetLanguage Die Zielsprache für die Transkription
+ * @param libraryId ID der aktiven Bibliothek
+ * @param useCache Cache verwenden (Standard: true)
+ * @returns Die vollständige Response vom Secretary Service oder nur den Text (für Abwärtskompatibilität)
+ */
+export async function transformAudio(
+  file: File, 
+  targetLanguage: string,
+  libraryId: string,
+  useCache: boolean = true
+): Promise<SecretaryAudioResponse | string> {
+  try {
+    console.log('[secretary/client] transformAudio aufgerufen mit Sprache:', targetLanguage, 'und useCache:', useCache);
+    
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('targetLanguage', targetLanguage);
+    formData.append('useCache', useCache.toString());
+    
+    // Angepasste Header bei expliziten Optionen
+    const customHeaders: HeadersInit = {};
+    customHeaders['X-Library-Id'] = libraryId;
+    
+    console.log('[secretary/client] Sende Anfrage an Secretary Service API');
+    const response = await fetch('/api/secretary/process-audio', {
+      method: 'POST',
+      body: formData,
+      headers: customHeaders
+    });
+
+    console.log('[secretary/client] Antwort erhalten, Status:', response.status);
+    if (!response.ok) {
+      throw new SecretaryServiceError(`Fehler bei der Verbindung zum Secretary Service: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    console.log('[secretary/client] Daten erfolgreich empfangen');
+    
+    // Gebe die vollständige Response zurück
+    // Die API Route sollte bereits die vollständige Response vom Secretary Service durchreichen
+    return data;
+  } catch (error) {
+    console.error('[secretary/client] Fehler:', error);
+    if (error instanceof SecretaryServiceError) {
+      throw error;
+    }
+    throw new SecretaryServiceError('Fehler bei der Verarbeitung der Audio-Datei');
+  }
+}
+
+/**
+ * Transformiert einen Text mithilfe des Secretary Services mit Template-Name
+ * 
+ * @param textContent Der zu transformierende Text
+ * @param targetLanguage Die Zielsprache für die Transformation
+ * @param libraryId ID der aktiven Bibliothek
+ * @param template Template-Name für die Transformation
+ * @returns Den transformierten Text
+ */
+export async function transformText(
+  textContent: string,
+  targetLanguage: string,
+  libraryId: string,
+  template: string = "Besprechung"
+): Promise<string> {
+  try {
+    console.log('[secretary/client] transformText aufgerufen mit Sprache:', targetLanguage, 'und Template:', template);
+    console.log('[secretary/client] Text-Länge:', textContent?.length || 0);
+    console.log('[secretary/client] Text-Vorschau:', textContent?.substring(0, 100) || 'KEIN TEXT');
+    
+    if (!textContent || textContent.trim().length === 0) {
+      throw new SecretaryServiceError('Kein Text zum Transformieren vorhanden');
+    }
+    
+    const formData = new FormData();
+    formData.append('text', textContent);
+    formData.append('targetLanguage', targetLanguage);
+    formData.append('template', template);
+    
+    // Debug: FormData-Inhalt prüfen
+    console.log('[secretary/client] FormData erstellt mit:', {
+      text: formData.get('text') ? 'vorhanden' : 'fehlt',
+      targetLanguage: formData.get('targetLanguage'),
+      template: formData.get('template')
+    });
+    
+    // Angepasste Header für den Secretary Service
+    const customHeaders: HeadersInit = {};
+    customHeaders['X-Library-Id'] = libraryId;
+    
+    console.log('[secretary/client] Sende Anfrage an Secretary Service API');
+    const response = await fetch('/api/secretary/process-text', {
+      method: 'POST',
+      body: formData,
+      headers: customHeaders
+    });
+
+    console.log('[secretary/client] Antwort erhalten, Status:', response.status);
+    if (!response.ok) {
+      throw new SecretaryServiceError(`Fehler bei der Verbindung zum Secretary Service: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    console.log('[secretary/client] Daten erfolgreich empfangen');
+    return data.text;
+  } catch (error) {
+    console.error('[secretary/client] Fehler bei der Texttransformation:', error);
+    if (error instanceof SecretaryServiceError) {
+      throw error;
+    }
+    throw new SecretaryServiceError('Fehler bei der Verarbeitung des Textes');
+  }
+}
+
+/**
+ * Transformiert einen Text mithilfe des Secretary Services mit Template-Inhalt
+ * 
+ * @param textContent Der zu transformierende Text
+ * @param targetLanguage Die Zielsprache für die Transformation
+ * @param libraryId ID der aktiven Bibliothek
+ * @param templateContent Template-Inhalt für die Transformation
+ * @returns Den transformierten Text
+ */
+export async function transformTextWithTemplate(
+  textContent: string,
+  targetLanguage: string,
+  libraryId: string,
+  templateContent: string
+): Promise<string> {
+  try {
+    console.log('[secretary/client] transformTextWithTemplate aufgerufen mit Template-Content');
+    console.log('[secretary/client] Text-Länge:', textContent?.length || 0);
+    console.log('[secretary/client] Template-Content-Länge:', templateContent?.length || 0);
+    
+    if (!textContent || textContent.trim().length === 0) {
+      throw new SecretaryServiceError('Kein Text zum Transformieren vorhanden');
+    }
+    
+    if (!templateContent || templateContent.trim().length === 0) {
+      throw new SecretaryServiceError('Kein Template-Content vorhanden');
+    }
+    
+    const formData = new FormData();
+    formData.append('text', textContent);
+    formData.append('targetLanguage', targetLanguage);
+    formData.append('templateContent', templateContent);
+    
+    // Debug: FormData-Inhalt prüfen
+    console.log('[secretary/client] FormData erstellt mit:', {
+      text: formData.get('text') ? 'vorhanden' : 'fehlt',
+      targetLanguage: formData.get('targetLanguage'),
+      templateContent: formData.get('templateContent') ? 'vorhanden' : 'fehlt'
+    });
+    
+    // Angepasste Header für den Secretary Service
+    const customHeaders: HeadersInit = {};
+    customHeaders['X-Library-Id'] = libraryId;
+    
+    console.log('[secretary/client] Sende Anfrage an Secretary Service API mit Template-Content');
+    const response = await fetch('/api/secretary/process-text', {
+      method: 'POST',
+      body: formData,
+      headers: customHeaders
+    });
+
+    console.log('[secretary/client] Antwort erhalten, Status:', response.status);
+    if (!response.ok) {
+      throw new SecretaryServiceError(`Fehler bei der Verbindung zum Secretary Service: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    console.log('[secretary/client] Template-Content-Transformation erfolgreich');
+    return data.text;
+  } catch (error) {
+    console.error('[secretary/client] Fehler bei der Template-Content-Transformation:', error);
+    if (error instanceof SecretaryServiceError) {
+      throw error;
+    }
+    throw new SecretaryServiceError('Fehler bei der Verarbeitung des Textes mit Template-Content');
+  }
+}
+
+/**
+ * Erstellt eine Zusammenfassung für einen einzelnen Track
+ * 
+ * @param trackName Name des Tracks
+ * @param targetLanguage Zielsprache für die Zusammenfassung
+ * @param libraryId ID der aktiven Bibliothek
+ * @param template Template für die Zusammenfassung (Standard: "track_eco_social")
+ * @param useCache Cache verwenden (Standard: false)
+ * @returns Die API-Antwort mit der Zusammenfassung
+ */
+export async function createTrackSummary(
+  trackName: string,
+  targetLanguage: string,
+  libraryId: string,
+  template: string = "track_eco_social",
+  useCache: boolean = false
+): Promise<unknown> {
+  try {
+    console.log('[secretary/client] createTrackSummary aufgerufen für Track:', trackName, 'und Bibliothek:', libraryId);
+    console.log('[secretary/client] Template:', template, 'Sprache:', targetLanguage);
+    
+    if (!trackName) {
+      throw new SecretaryServiceError('Kein Track-Name angegeben');
+    }
+    
+    if (!libraryId) {
+      console.warn('[secretary/client] WARNUNG: Keine Bibliotheks-ID angegeben!');
+    }
+    
+    // Angepasste Header für den Secretary Service
+    const customHeaders: HeadersInit = {
+      'Content-Type': 'application/json',
+      'X-Library-Id': libraryId
+    };
+    
+    const requestBody = {
+      template,
+      target_language: targetLanguage,
+      useCache
+    };
+    
+    console.log('[secretary/client] Sende Anfrage an Secretary Track Processor API:', JSON.stringify(requestBody));
+    const response = await fetch(`/api/secretary/tracks/${encodeURIComponent(trackName)}/summary`, {
+      method: 'POST',
+      headers: customHeaders,
+      body: JSON.stringify(requestBody)
+    });
+
+    console.log('[secretary/client] Antwort erhalten, Status:', response.status, response.statusText);
+    
+    const data = await response.json();
+    console.log('[secretary/client] Antwort-Daten:', JSON.stringify(data).substring(0, 500) + '...');
+    
+    if (!response.ok) {
+      // Detaillierte Fehlermeldung konstruieren
+      let errorMsg = `Fehler bei der Verbindung zum Secretary Service: ${response.statusText}`;
+      if (data && data.error) {
+        errorMsg += ` - ${data.error.code || ''}: ${data.error.message || 'Unbekannter Fehler'}`;
+      }
+      throw new SecretaryServiceError(errorMsg);
+    }
+
+    console.log('[secretary/client] Zusammenfassung erfolgreich erstellt');
+    return data;
+  } catch (error) {
+    console.error('[secretary/client] Fehler bei der Erstellung der Track-Zusammenfassung:', error);
+    if (error instanceof SecretaryServiceError) {
+      throw error;
+    }
+    throw new SecretaryServiceError('Fehler bei der Erstellung der Track-Zusammenfassung');
+  }
+}
+
+/**
+ * Erstellt Zusammenfassungen für alle oder gefilterte Tracks
+ * 
+ * @param targetLanguage Zielsprache für die Zusammenfassungen
+ * @param libraryId ID der aktiven Bibliothek
+ * @param template Template für die Zusammenfassungen (Standard: "track_eco_social") 
+ * @param useCache Cache verwenden (Standard: false)
+ * @returns Die API-Antwort mit allen Zusammenfassungen
+ */
+export async function createAllTrackSummaries(
+  targetLanguage: string,
+  libraryId: string,
+  template: string = "track_eco_social",
+  useCache: boolean = false
+): Promise<unknown> {
+  try {
+    console.log('[secretary/client] createAllTrackSummaries aufgerufen');
+    
+    // Angepasste Header für den Secretary Service
+    const customHeaders: HeadersInit = {
+      'Content-Type': 'application/json',
+      'X-Library-Id': libraryId
+    };
+    
+    console.log('[secretary/client] Sende Anfrage an Secretary Track Processor API');
+    const response = await fetch('/api/secretary/tracks/*/summarize_all', {
+      method: 'POST',
+      headers: customHeaders,
+      body: JSON.stringify({
+        template,
+        target_language: targetLanguage,
+        useCache
+      })
+    });
+
+    console.log('[secretary/client] Antwort erhalten, Status:', response.status);
+    if (!response.ok) {
+      throw new SecretaryServiceError(`Fehler bei der Verbindung zum Secretary Service: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    console.log('[secretary/client] Alle Zusammenfassungen erfolgreich erstellt');
+    return data;
+  } catch (error) {
+    console.error('[secretary/client] Fehler bei der Erstellung aller Track-Zusammenfassungen:', error);
+    if (error instanceof SecretaryServiceError) {
+      throw error;
+    }
+    throw new SecretaryServiceError('Fehler bei der Erstellung aller Track-Zusammenfassungen');
+  }
+}
+
+/**
+ * Transformiert eine Video-Datei mithilfe des Secretary Services
+ * 
+ * @param file Die zu transformierende Video-Datei 
+ * @param options Optionen für die Video-Transformation
+ * @param libraryId ID der aktiven Bibliothek
+ * @returns Die vollständige Response vom Secretary Service
+ */
+export async function transformVideo(
+  file: File, 
+  options: {
+    extractAudio?: boolean;
+    extractFrames?: boolean;
+    frameInterval?: number;
+    targetLanguage?: string;
+    sourceLanguage?: string;
+    template?: string;
+  },
+  libraryId: string
+): Promise<SecretaryVideoResponse> {
+  try {
+    console.log('[secretary/client] transformVideo aufgerufen mit Optionen:', options);
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    // Sprachoptionen
+    if (options.targetLanguage) {
+      formData.append('targetLanguage', options.targetLanguage);
+    }
+    
+    if (options.sourceLanguage) {
+      formData.append('sourceLanguage', options.sourceLanguage);
+    }
+    
+    // Template-Option
+    if (options.template) {
+      formData.append('template', options.template);
+    }
+    
+    // Video-spezifische Optionen
+    if (options.extractAudio !== undefined) {
+      formData.append('extractAudio', options.extractAudio.toString());
+    }
+    
+    if (options.extractFrames !== undefined) {
+      formData.append('extractFrames', options.extractFrames.toString());
+    }
+    
+    if (options.frameInterval !== undefined) {
+      formData.append('frameInterval', options.frameInterval.toString());
+    }
+    
+    // Angepasste Header bei expliziten Optionen
+    const customHeaders: HeadersInit = {};
+    customHeaders['X-Library-Id'] = libraryId;
+    
+    console.log('[secretary/client] Sende Anfrage an Secretary Service API');
+    const response = await fetch('/api/secretary/process-video', {
+      method: 'POST',
+      body: formData,
+      headers: customHeaders
+    });
+
+    console.log('[secretary/client] Antwort erhalten, Status:', response.status);
+    if (!response.ok) {
+      throw new SecretaryServiceError(`Fehler bei der Verbindung zum Secretary Service: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    console.log('[secretary/client] Video-Daten erfolgreich empfangen');
+    
+    // Gebe die vollständige Response zurück
+    return data as SecretaryVideoResponse;
+  } catch (error) {
+    console.error('[secretary/client] Fehler bei der Video-Transformation:', error);
+    if (error instanceof SecretaryServiceError) {
+      throw error;
+    }
+    throw new SecretaryServiceError('Fehler bei der Verarbeitung der Video-Datei');
+  }
+}
+
+/**
+ * Transformiert eine PDF-Datei mithilfe des Secretary Services
+ * 
+ * @param file Die zu transformierende PDF-Datei 
+ * @param targetLanguage Die Zielsprache für die Verarbeitung
+ * @param libraryId ID der aktiven Bibliothek
+ * @param template Optionales Template für die Verarbeitung
+ * @param extractionMethod Die Extraktionsmethode (native, ocr, both, preview, preview_and_native, llm, llm_and_ocr)
+ * @param useCache Ob Cache verwendet werden soll
+ * @param includeImages Ob Bilder mit extrahiert werden sollen
+ * @returns Die vollständige Response vom Secretary Service
+ */
+export async function transformPdf(
+  file: File, 
+  targetLanguage: string,
+  libraryId: string,
+  template?: string,
+  extractionMethod: string = 'native',
+  useCache: boolean = true,
+  includeOcrImages?: boolean, // Mistral OCR Bilder als Base64 (in mistral_ocr_raw.pages[*].images[*].image_base64)
+  skipTemplate?: boolean,
+  context?: { originalItemId?: string; parentId?: string; originalFileName?: string; policies?: import('@/lib/processing/phase-policy').PhasePolicies }
+): Promise<SecretaryPdfResponse> {
+  try {
+    console.log('[secretary/client] transformPdf aufgerufen mit Sprache:', targetLanguage, 'und Template:', template);
+    // OneDrive Token-Sync: Wenn der Client Tokens im localStorage hat, stelle sicher,
+    // dass der Server (DB) vor dem Jobstart aktuelle Tokens hat, damit Gates/Webhook funktionieren.
+    await (async () => {
+      try {
+        const key = `onedrive_tokens_${libraryId}`;
+        const json = typeof window !== 'undefined' ? localStorage.getItem(key) : null;
+        if (!json) return;
+        const tokens = JSON.parse(json) as { accessToken: string; refreshToken: string; expiry: number };
+        const now = Date.now();
+        const bufferMs = 120_000; // 2 Minuten Buffer
+        let accessToken = tokens.accessToken;
+        let refreshToken = tokens.refreshToken;
+        let expiryMs = Number(tokens.expiry);
+
+        // Falls abgelaufen oder kurz davor: Refresh über Serverroute
+        if (!expiryMs || expiryMs - now <= bufferMs) {
+          const resp = await fetch('/api/auth/onedrive/refresh', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ libraryId, refreshToken })
+          });
+          if (resp.ok) {
+            const data = await resp.json();
+            accessToken = data.accessToken;
+            refreshToken = data.refreshToken || refreshToken;
+            // Server liefert expiresIn in Sekunden
+            expiryMs = now + (Number(data.expiresIn || 0) * 1000);
+            // Update localStorage
+            localStorage.setItem(key, JSON.stringify({ accessToken, refreshToken, expiry: expiryMs }));
+          }
+        }
+
+        // Persistiere Tokens in DB (Server), damit Webhook/Server‑Gates Zugriff haben
+        await fetch(`/api/libraries/${libraryId}/tokens`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ accessToken, refreshToken, tokenExpiry: Math.floor(expiryMs / 1000).toString() })
+        });
+      } catch {}
+    })();
+    
+    // Für Mistral OCR: Beide Parameter standardmäßig true
+    const isMistralOcr = extractionMethod === 'mistral_ocr';
+    const includeOcrImagesValue = includeOcrImages !== undefined 
+      ? includeOcrImages 
+      : (isMistralOcr ? true : false); // Standard: true für Mistral OCR
+    const includePageImagesValue = isMistralOcr ? true : false; // Standard: true für Mistral OCR
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('targetLanguage', targetLanguage);
+    formData.append('extractionMethod', extractionMethod);
+    formData.append('useCache', useCache.toString());
+    formData.append('includeOcrImages', includeOcrImagesValue.toString());
+    formData.append('includePageImages', includePageImagesValue.toString());
+    // Policies als JSON übergeben (neues Format)
+    if (context?.policies) {
+      formData.append('policies', JSON.stringify(context.policies));
+    }
+    
+    // Template-Option
+    if (template) {
+      formData.append('template', template);
+    }
+    // Kontext-Informationen für zielgenaues Speichern
+    if (context?.originalItemId) {
+      formData.append('originalItemId', context.originalItemId);
+    }
+    if (context?.parentId) {
+      formData.append('parentId', context.parentId);
+    }
+    if (context?.originalFileName) {
+      formData.append('originalFileName', context.originalFileName);
+    }
+    
+    // Angepasste Header bei expliziten Optionen
+    const customHeaders: HeadersInit = {};
+    customHeaders['X-Library-Id'] = libraryId;
+    
+    console.log('[secretary/client] Sende Anfrage an Secretary Service API');
+    const response = await fetch('/api/secretary/process-pdf', {
+      method: 'POST',
+      body: formData,
+      headers: customHeaders
+    });
+
+    console.log('[secretary/client] Antwort erhalten, Status:', response.status);
+    if (!response.ok) {
+      throw new SecretaryServiceError(`Fehler bei der Verbindung zum Secretary Service: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    console.log('[secretary/client] PDF-Daten erfolgreich empfangen');
+    
+    // Gebe die vollständige Response zurück
+    return data as SecretaryPdfResponse;
+  } catch (error) {
+    console.error('[secretary/client] Fehler bei der PDF-Transformation:', error);
+    if (error instanceof SecretaryServiceError) {
+      throw error;
+    }
+    throw new SecretaryServiceError('Fehler bei der Verarbeitung der PDF-Datei');
+  }
+}
+
+/**
+ * Interface für Image-OCR-Response
+ */
+export interface SecretaryImageResponse {
+  status: string;
+  request?: {
+    processor: string;
+    timestamp: string;
+    parameters: {
+      file_path: string;
+      template: string | null;
+      context: string | null;
+      extraction_method: string;
+    };
+  };
+  process?: {
+    id: string;
+    main_processor: string;
+    started: string;
+    sub_processors: string[];
+    completed: string | null;
+    duration: number | null;
+    is_from_cache: boolean;
+    cache_key: string;
+    llm_info?: {
+      requests: Array<{
+        model: string;
+        purpose: string;
+        tokens: number;
+        duration: number;
+        processor: string;
+        timestamp: string;
+      }>;
+      requests_count: number;
+      total_tokens: number;
+      total_duration: number;
+    };
+  };
+  error: unknown | null;
+  data: {
+    extracted_text: string;
+    metadata: {
+      file_name: string;
+      file_size: number;
+      dimensions: string;
+      format: string;
+      color_mode: string;
+      dpi: number[];
+      process_dir: string;
+      extraction_method: string;
+      preview_paths: string[];
+    };
+    process_id: string;
+    processed_at: string;
+    status: string;
+  };
+}
+
+/**
+ * Interface für Session-Import-Response
+ */
+export interface SessionImportResponse {
+  status: string;
+  data: {
+    session: string;
+    filename: string;
+    track: string;
+    video_url: string;
+    attachments_url?: string;
+    event: string;
+    url: string;
+    day: string;
+    starttime: string;
+    endtime: string;
+    speakers: string[];
+    speakers_url?: string[];
+    speakers_image_url?: string[];
+    source_language: string;
+  };
+  error?: {
+    code: string;
+    message: string;
+  };
+}
+
+/**
+ * Transformiert ein Bild mithilfe des Secretary Services
+ * 
+ * @param file Die zu transformierende Bilddatei
+ * @param targetLanguage Die Zielsprache für die Verarbeitung
+ * @param libraryId ID der aktiven Bibliothek
+ * @param extractionMethod Die Extraktionsmethode (ocr, llm, llm_and_ocr, native, both, preview, preview_and_native)
+ * @param context Optionaler JSON-Kontext für LLM-Optimierung
+ * @param useCache Ob Cache verwendet werden soll
+ * @returns Die vollständige Response vom Secretary Service
+ */
+export async function transformImage(
+  file: File,
+  targetLanguage: string,
+  libraryId: string,
+  extractionMethod: string = 'ocr',
+  context?: string,
+  useCache: boolean = true
+): Promise<SecretaryImageResponse> {
+  try {
+    console.log('[secretary/client] transformImage aufgerufen mit Sprache:', targetLanguage, 'und Methode:', extractionMethod);
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('targetLanguage', targetLanguage);
+    formData.append('extraction_method', extractionMethod);
+    formData.append('useCache', useCache.toString());
+    
+    // Context-Option
+    if (context) {
+      formData.append('context', context);
+    }
+    
+    // Angepasste Header bei expliziten Optionen
+    const customHeaders: HeadersInit = {};
+    customHeaders['X-Library-Id'] = libraryId;
+    
+    console.log('[secretary/client] Sende Anfrage an Secretary Service API');
+    const response = await fetch('/api/secretary/process-image', {
+      method: 'POST',
+      body: formData,
+      headers: customHeaders
+    });
+
+    console.log('[secretary/client] Antwort erhalten, Status:', response.status);
+    if (!response.ok) {
+      throw new SecretaryServiceError(`Fehler bei der Verbindung zum Secretary Service: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    console.log('[secretary/client] Bild-Daten erfolgreich empfangen');
+    
+    // Gebe die vollständige Response zurück
+    return data as SecretaryImageResponse;
+  } catch (error) {
+    console.error('[secretary/client] Fehler bei der Bild-Transformation:', error);
+    if (error instanceof SecretaryServiceError) {
+      throw error;
+    }
+    throw new SecretaryServiceError('Fehler bei der Verarbeitung der Bilddatei');
+  }
+}
+
+/**
+ * Importiert Session-Daten aus einer Website-URL mithilfe des Secretary Services
+ * 
+ * @param url Die zu analysierende Website-URL
+ * @param options Optionen für die Session-Extraktion
+ * @param options.containerSelector Optional: XPath-Ausdruck für Container-Selektor zur gezielten Extraktion
+ * @returns Die extrahierten Session-Daten
+ */
+export async function importSessionFromUrl(
+  url: string,
+  options: {
+    sourceLanguage?: string;
+    targetLanguage?: string;
+    template?: string;
+    useCache?: boolean;
+    containerSelector?: string;
+  } = {}
+): Promise<TemplateExtractionResponse> {
+  try {
+    console.log('[secretary/client] importSessionFromUrl aufgerufen mit URL:', url);
+    
+    const requestBody: Record<string, unknown> = {
+      url,
+      source_language: options.sourceLanguage || 'en',
+      target_language: options.targetLanguage || 'en',
+      template: options.template || 'ExtractSessionDataFromWebsite',
+      use_cache: options.useCache ?? false
+    };
+    
+    // Container-Selector optional hinzufügen, falls vorhanden
+    if (options.containerSelector && options.containerSelector.trim().length > 0) {
+      requestBody.container_selector = options.containerSelector.trim();
+    }
+    
+    const response = await fetch('/api/secretary/import-from-url', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new SecretaryServiceError(
+        errorData.error?.message || `HTTP ${response.status}: ${response.statusText}`
+      );
+    }
+
+    const data: TemplateExtractionResponse = await response.json();
+    console.log('[secretary/client] Session-Import erfolgreich:', data);
+    
+    return data;
+  } catch (error) {
+    console.error('[secretary/client] Fehler beim Session-Import:', error);
+    if (error instanceof SecretaryServiceError) {
+      throw error;
+    }
+    throw new SecretaryServiceError(
+      error instanceof Error ? error.message : 'Unbekannter Fehler beim Session-Import'
+    );
+  }
+} 
+
+/**
+ * Liest eine Webseite aus und gibt den extrahierten Text zurück.
+ *
+ * Motivation: Im Creation Wizard wollen wir eine URL als Quelle nutzen, ohne
+ * Session-spezifische Daten zu mappen. Wir verwenden denselben Proxy wie der
+ * Session-Import (`/api/secretary/import-from-url`) und nehmen nur `data.text`.
+ */
+export async function extractTextFromUrl(
+  url: string,
+  options: {
+    sourceLanguage?: string;
+    targetLanguage?: string;
+    /** Optional: Secretary Template-Name für URL-Extraktion (Default bleibt wie Session-Import) */
+    template?: string;
+    useCache?: boolean;
+    containerSelector?: string;
+  } = {}
+): Promise<{ text: string; raw: TemplateExtractionResponse }> {
+  const raw = await importSessionFromUrl(url, options)
+  const text = raw?.data?.text
+  if (typeof text !== 'string' || !text.trim()) {
+    throw new SecretaryServiceError('Webseite konnte nicht gelesen werden (kein Text gefunden).')
+  }
+  return { text, raw }
+}
+
+/**
+ * Startet die vollständige Session-Verarbeitung im Secretary Service
+ * und liefert Markdown/ZIP im Response.
+ */
+export interface ProcessSessionInput {
+  event: string;
+  session: string;
+  url: string;
+  filename: string;
+  track: string;
+  day?: string;
+  starttime?: string;
+  endtime?: string;
+  speakers?: string[];
+  speakers_url?: string[];
+  speakers_image_url?: string[];
+  video_url?: string;
+  video_transcript?: string;
+  attachments_url?: string;
+  source_language?: string;
+  target_language?: string;
+  target?: string;
+  template?: string;
+  use_cache?: boolean;
+  create_archive?: boolean;
+}
+
+export interface ProcessSessionSuccessData {
+  status: 'success';
+  data?: {
+    output?: {
+      archive_data?: string;
+      archive_filename?: string;
+      markdown_content?: string;
+      markdown_file?: string;
+    };
+  };
+}
+
+export interface ProcessSessionErrorData {
+  status: 'error';
+  error?: { code?: string; message?: string };
+}
+
+export type ProcessSessionResponse = ProcessSessionSuccessData | ProcessSessionErrorData | unknown;
+
+export async function processSession(input: ProcessSessionInput): Promise<ProcessSessionResponse> {
+  try {
+    const resp = await fetch('/api/secretary/session/process', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(input),
+    });
+    const data: ProcessSessionResponse = await resp.json();
+    if (!resp.ok || (data as ProcessSessionErrorData)?.status === 'error') {
+      const message = (data as ProcessSessionErrorData)?.error?.message || resp.statusText;
+      throw new SecretaryServiceError(message);
+    }
+    return data;
+  } catch (error) {
+    if (error instanceof SecretaryServiceError) throw error;
+    throw new SecretaryServiceError('Fehler bei processSession');
+  }
+}
+
+/**
+ * Ruft den RAG Embedding-Endpoint des Secretary Services auf.
+ * Sendet Markdown-Text und erhält Chunks mit Embeddings zurück.
+ * 
+ * @param params RAG Embedding-Parameter
+ * @returns Response vom Secretary Service mit Chunks und Embeddings
+ */
+export async function embedTextRag(params: {
+  markdown: string;
+  documentId?: string;
+  chunkSize?: number;
+  chunkOverlap?: number;
+  embeddingModel?: string;
+  embedding_dimensions?: number;
+  metadata?: Record<string, unknown>;
+}): Promise<SecretaryRagResponse> {
+  const { baseUrl, apiKey } = getSecretaryConfig();
+  if (!baseUrl) {
+    throw new SecretaryServiceError('SECRETARY_SERVICE_URL nicht konfiguriert');
+  }
+  if (!apiKey) {
+    throw new SecretaryServiceError('SECRETARY_SERVICE_API_KEY nicht konfiguriert');
+  }
+
+  // baseUrl enthält bereits /api, daher nur /rag/embed-text anhängen
+  const url = `${baseUrl}/rag/embed-text`;
+  
+  // Debug-Logging für URL-Verifikation
+  console.log('[secretary/client] embedTextRag - URL:', url);
+  console.log('[secretary/client] embedTextRag - baseUrl:', baseUrl);
+  
+  // Request-Body gemäß RAG API Dokumentation
+  const body = {
+    markdown: params.markdown,
+    document_id: params.documentId,
+    chunk_size: params.chunkSize ?? 1000,
+    chunk_overlap: params.chunkOverlap ?? 200,
+    embedding_model: params.embeddingModel ?? 'voyage-3-large',
+    embedding_dimensions: params.embedding_dimensions,
+    metadata: params.metadata || {},
+  };
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${apiKey}`,
+    'X-Secretary-Api-Key': apiKey,
+  };
+
+  try {
+    const res = await fetchWithTimeout(url, {
+      method: 'POST',
+      body: JSON.stringify(body),
+      headers,
+      timeoutMs: 60000, // 60 Sekunden Timeout
+    });
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error('[secretary/client] embedTextRag - Fehler:', {
+        status: res.status,
+        statusText: res.statusText,
+        url,
+        errorText: errorText.substring(0, 500), // Erste 500 Zeichen
+      });
+      throw new SecretaryServiceError(`Secretary Service RAG Fehler: ${res.status} ${errorText.substring(0, 200)}`);
+    }
+
+    const data = await res.json() as SecretaryRagResponse;
+    
+    if (data.status === 'error') {
+      const errorMessage = data.error?.message || 'Unbekannter Fehler beim RAG Embedding';
+      throw new SecretaryServiceError(errorMessage);
+    }
+
+    return data;
+  } catch (error) {
+    if (error instanceof SecretaryServiceError) {
+      throw error;
+    }
+    
+    // Spezifische Fehlerbehandlung für verschiedene Fehlertypen
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    
+    // Prüfe auf Netzwerkfehler (Service nicht erreichbar)
+    if (errorMessage.includes('fetch failed') || 
+        errorMessage.includes('ECONNREFUSED') ||
+        errorMessage.includes('NetworkError')) {
+      console.error('[secretary/client] embedTextRag - Secretary Service nicht erreichbar:', {
+        url,
+        baseUrl,
+        error: errorMessage,
+        hint: 'Bitte prüfen Sie, ob der Secretary Service läuft und erreichbar ist.'
+      });
+      throw new SecretaryServiceError(
+        `Secretary Service nicht erreichbar (${url}). ` +
+        `Bitte prüfen Sie, ob der Service läuft und die URL korrekt ist. ` +
+        `Fehler: ${errorMessage}`
+      );
+    }
+    
+    // Prüfe auf Timeout-Fehler
+    if (errorMessage.includes('Timeout') || errorMessage.includes('timeout')) {
+      console.error('[secretary/client] embedTextRag - Timeout:', {
+        url,
+        timeoutMs: 60000,
+        error: errorMessage
+      });
+      throw new SecretaryServiceError(
+        `Secretary Service Timeout nach 60 Sekunden. ` +
+        `Die Anfrage war zu groß oder der Service antwortet zu langsam. ` +
+        `Fehler: ${errorMessage}`
+      );
+    }
+    
+    // Generischer Fehler
+    throw new SecretaryServiceError(`Fehler beim RAG Embedding: ${errorMessage}`);
+  }
+}
