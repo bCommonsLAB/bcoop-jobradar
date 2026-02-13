@@ -107,16 +107,6 @@ function FavoritesPageContent() {
           </div>
           <div className="flex items-center gap-1.5 md:gap-4 lg:gap-5">
             <LanguageToggleButton />
-            <Button
-              asChild
-              variant="ghost"
-              size="sm"
-              className="bg-white/20 backdrop-blur-md hover:bg-white/30 text-white border border-white/30 rounded-xl shadow-lg transition-all duration-300"
-            >
-              <Link href="/jobs" aria-label={t("nav.backToJobs") ?? "Zurück zu Jobs"}>
-                {t("nav.backToJobs")}
-              </Link>
-            </Button>
           </div>
         </div>
       </header>
