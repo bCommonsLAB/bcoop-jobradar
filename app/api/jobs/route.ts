@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getConfiguredCollection } from "@/lib/mongodb-service"
-import { normalizeJobDocument, type Job, type JobCreateRequest } from "@/lib/job"
+import { normalizeJobDocument, type Job, type JobCreateInput, type JobCreateRequest } from "@/lib/job"
 import { JobRepository } from "@/lib/job-repository"
 
 // Der MongoDB Node-Driver läuft nicht in der Edge-Runtime.
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
 
     // Validierung der einzelnen Job-Felder
     // Pflichtfelder: title, company, location, locationRegion, employmentType, startDate, jobType, phone, email, description
-    const requiredFields: (keyof Job)[] = [
+    const requiredFields: (keyof JobCreateInput)[] = [
       'title',
       'company',
       'location',
@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Validierung von Arrays (falls vorhanden)
-      const arrayFields: (keyof Job)[] = [
+      const arrayFields: (keyof JobCreateInput)[] = [
         'requirements',
         'benefits',
         'languages',

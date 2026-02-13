@@ -38,6 +38,8 @@
   "exclude": [
     "node_modules",
     "Vorlage",
-    "Vorlage/**"
+    "Vorlage/**",
+    "docs",
+    "docs/**"
   ]
 }
