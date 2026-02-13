@@ -121,88 +121,102 @@ function FavoritesPageContent() {
         </div>
       </header>
 
-      <div className="max-w-6xl mx-auto px-3 md:px-6 lg:px-8 pt-5 md:pt-8 lg:pt-10">
-        <div className="flex items-center gap-3 md:gap-4 mb-4 md:mb-6">
-          <Link href="/jobs">
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-1.5 md:gap-2 bg-white border border-border rounded-lg md:rounded-xl shadow-sm hover:shadow-md transition-all px-3 md:px-4 py-2 text-xs md:text-sm font-medium"
-            >
-              <ArrowLeft className="w-4 h-4 md:w-5 md:h-5" />
-              {t("nav.backToJobs")}
-            </Button>
-          </Link>
+      <div className="relative min-h-[calc(100vh-200px)]">
+        {/* Hintergrundbild für Content-Bereich */}
+        <div className="fixed inset-0 z-0">
+          <Image 
+            src="/hero-lake.png" 
+            alt="Mountain Lake Landscape" 
+            fill 
+            className="object-cover opacity-20" 
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-background/80 via-accent/20 to-accent/30" />
         </div>
+        
+        {/* Content mit Glassmorphism */}
+        <div className="relative z-10 w-full px-3 md:px-6 lg:px-8 pt-5 md:pt-8 lg:pt-10">
+          <div className="flex items-center gap-3 md:gap-4 mb-4 md:mb-6">
+            <Link href="/jobs">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 md:gap-2 bg-white/80 backdrop-blur-md border border-white/40 rounded-lg md:rounded-xl shadow-lg hover:shadow-xl hover:bg-white/90 transition-all px-3 md:px-4 py-2 text-xs md:text-sm font-medium"
+              >
+                <ArrowLeft className="w-4 h-4 md:w-5 md:h-5" />
+                {t("nav.backToJobs")}
+              </Button>
+            </Link>
+          </div>
 
-        <div className="bg-card rounded-lg md:rounded-xl lg:rounded-2xl p-4 md:p-6 lg:p-8 shadow-sm border border-border/50 mb-4 md:mb-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-3 md:gap-4">
-              <div className="p-2 md:p-2.5 bg-primary/10 rounded-lg md:rounded-xl">
-                <Heart className="w-5 h-5 md:w-6 md:h-6 text-primary fill-primary" />
-              </div>
-              <div>
-                <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-foreground leading-tight tracking-tight">
-                  {t("favorites.title")}
-                </h2>
+          <div className="bg-white/80 backdrop-blur-lg rounded-xl md:rounded-2xl lg:rounded-3xl p-4 md:p-6 lg:p-8 shadow-xl border border-white/40 mb-4 md:mb-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3 md:gap-4">
+                <div className="p-2 md:p-2.5 bg-primary/10 rounded-lg md:rounded-xl">
+                  <Heart className="w-5 h-5 md:w-6 md:h-6 text-primary fill-primary" />
+                </div>
+                <div>
+                  <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-foreground leading-tight tracking-tight">
+                    {t("favorites.title")}
+                  </h2>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div className="max-w-6xl mx-auto px-2 md:px-5 pb-6 md:pb-8">
-        {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 lg:gap-6">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-card border border-border/50 shadow-sm rounded-lg md:rounded-xl overflow-hidden">
-                <Skeleton className="w-full h-32 md:h-40" />
-                <div className="p-4 space-y-3">
-                  <Skeleton className="h-6 w-3/4" />
-                  <Skeleton className="h-4 w-1/2" />
-                  <Skeleton className="h-10 w-full" />
+        <div className="relative z-10 w-full px-2 md:px-5 pb-6 md:pb-8">
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 lg:gap-6">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="bg-white/80 backdrop-blur-md border border-white/40 shadow-lg rounded-lg md:rounded-xl overflow-hidden">
+                  <Skeleton className="w-full h-32 md:h-40" />
+                  <div className="p-4 space-y-3">
+                    <Skeleton className="h-6 w-3/4" />
+                    <Skeleton className="h-4 w-1/2" />
+                    <Skeleton className="h-10 w-full" />
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        ) : loadError ? (
-          <div className="bg-destructive/10 border border-destructive/20 rounded-lg md:rounded-xl p-4 md:p-6 text-center">
-            <p className="text-sm md:text-base text-destructive font-semibold">{loadError}</p>
-          </div>
-        ) : likedJobs.length === 0 ? (
-          <div className="bg-card rounded-xl md:rounded-2xl lg:rounded-3xl p-10 md:p-14 lg:p-16 text-center shadow-sm border border-border/40">
-            <div className="max-w-lg mx-auto">
-              <div className="flex items-center justify-center mb-6 md:mb-8">
-                <div className="p-4 md:p-5 bg-muted/50 rounded-full">
-                  <Heart className="w-12 h-12 md:w-16 md:h-16 text-muted-foreground/40" />
-                </div>
-              </div>
-              <h3 className="text-xl md:text-2xl lg:text-3xl font-semibold text-foreground mb-3 md:mb-4">
-                {t("favorites.emptyTitle")}
-              </h3>
-              <p className="text-sm md:text-base text-muted-foreground mb-6 md:mb-8 leading-relaxed">
-                {t("favorites.emptyDescription")}
-              </p>
-              <Link href="/jobs">
-                <Button 
-                  size="lg" 
-                  className="bg-gradient-to-r from-primary via-primary/90 to-accent hover:from-primary/90 hover:via-primary/80 hover:to-accent/90 text-white shadow-md hover:shadow-lg transition-all duration-200 px-6 md:px-8 py-3 md:py-4 text-sm md:text-base font-medium rounded-lg md:rounded-xl"
-                >
-                  {t("favorites.browseJobs")}
-                </Button>
-              </Link>
+              ))}
             </div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 lg:gap-6">
-            {likedJobs.map((job) => (
-              <JobCard key={job.id} job={job} />
-            ))}
-          </div>
-        )}
+          ) : loadError ? (
+            <div className="bg-white/80 backdrop-blur-lg border border-destructive/30 rounded-lg md:rounded-xl p-4 md:p-6 text-center shadow-xl">
+              <p className="text-sm md:text-base text-destructive font-semibold">{loadError}</p>
+            </div>
+          ) : likedJobs.length === 0 ? (
+            <div className="bg-white/80 backdrop-blur-lg rounded-xl md:rounded-2xl lg:rounded-3xl p-10 md:p-14 lg:p-16 text-center shadow-xl border border-white/40">
+              <div className="max-w-lg mx-auto">
+                <div className="flex items-center justify-center mb-6 md:mb-8">
+                  <div className="p-4 md:p-5 bg-muted/50 rounded-full">
+                    <Heart className="w-12 h-12 md:w-16 md:h-16 text-muted-foreground/40" />
+                  </div>
+                </div>
+                <h3 className="text-xl md:text-2xl lg:text-3xl font-semibold text-foreground mb-3 md:mb-4">
+                  {t("favorites.emptyTitle")}
+                </h3>
+                <p className="text-sm md:text-base text-muted-foreground mb-6 md:mb-8 leading-relaxed">
+                  {t("favorites.emptyDescription")}
+                </p>
+                <Link href="/jobs">
+                  <Button 
+                    size="lg" 
+                    className="bg-gradient-to-r from-primary via-primary/90 to-accent hover:from-primary/90 hover:via-primary/80 hover:to-accent/90 text-white shadow-md hover:shadow-lg transition-all duration-200 px-6 md:px-8 py-3 md:py-4 text-sm md:text-base font-medium rounded-lg md:rounded-xl"
+                  >
+                    {t("favorites.browseJobs")}
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 lg:gap-6">
+              {likedJobs.map((job) => (
+                <JobCard key={job.id} job={job} />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
-      <footer className="bg-white border-t border-border py-2 md:py-5 px-2 md:px-4 mt-auto">
+      <footer className="bg-white border-t border-border py-2 md:py-5 px-2 md:px-4 mt-auto relative z-10">
         <div className="max-w-6xl mx-auto text-center">
           <p className="text-xs md:text-base text-muted-foreground">{t("welcome.footer")}</p>
           <div className="mt-2 md:mt-4">
