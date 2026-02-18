@@ -17,44 +17,7 @@ import {
   Utensils,
 } from "lucide-react"
 import { useTranslation } from "@/hooks/use-translation"
-
-interface Job {
-  id: string
-  title: string
-  company: string
-  location: string
-  employmentType: string
-  startDate: string
-  hasAccommodation: boolean
-  hasMeals: boolean
-  phone: string
-  email: string
-  description: string
-  salary?: string
-  tasks?: string[]
-  offers?: string[]
-  companyDescription?: string
-  companyWebsite?: string
-  companyAddress?: string
-  fullDescription?: string
-  requirements?: string[]
-  benefits?: string[]
-  contractType?: string
-  experienceLevel?: string
-  education?: string
-  languages?: string[]
-  certifications?: string[]
-  contactPerson?: string
-  contactPhone?: string
-  contactEmail?: string
-  applicationDeadline?: string
-  jobReference?: string
-  workingHours?: string
-  salaryMin?: number
-  salaryMax?: number
-  numberOfPositions?: number
-  sourceUrl?: string
-}
+import type { Job } from "@/lib/job"
 
 interface JobDetailModalProps {
   job: Job
