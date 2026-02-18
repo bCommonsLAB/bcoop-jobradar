@@ -28,6 +28,8 @@ import { useToast } from "@/hooks/use-toast"
 import { iconSizes } from "@/lib/icon-sizes"
 import { cn } from "@/lib/utils"
 import { getJobTypeTone } from "@/lib/job-type-colors"
+import { useLanguage } from "@/components/language-provider"
+import { jobTitles, getJobTitle, getJobDescription } from "@/lib/job-titles"
 
 interface JobFiltersProps {
   onSubmit: (filters: { jobTypes: string[]; timeframe: string; locations: string[]; noQualificationRequired: boolean }) => void
@@ -38,10 +40,11 @@ interface JobFiltersProps {
 }
 
 interface CustomJob {
-  id: number
+  id: number | string
   title: string
   value: string
 }
+
 
 export default function JobFilters({ 
   onSubmit, 
@@ -52,6 +55,7 @@ export default function JobFilters({
 }: JobFiltersProps) {
   const { t } = useTranslation()
   const { toast } = useToast()
+  const { language } = useLanguage()
   const [jobTypes, setJobTypes] = useState<string[]>(() => {
     if (initialFilters?.jobTypes && initialFilters.jobTypes.length > 0) {
       return initialFilters.jobTypes
@@ -82,25 +86,62 @@ export default function JobFilters({
     }
   }, [initialFilters])
 
-  const predefinedJobs = [
-    { id: 1, title: "Aiuto cuoco (m/f/d)", company: "Ristorante Alto Adige", location: "Bolzano", type: "Part-time" },
-    { id: 2, title: "Cameriere/a (m/f/d)", company: "Hotel Dolomiti", location: "Merano", type: "Full-time" },
-    { id: 3, title: "Receptionist (m/f/d)", company: "Hotel Cristallo", location: "Cortina", type: "Full-time" },
-    { id: 4, title: "Barista (m/f/d)", company: "Caffè Centrale", location: "Bolzano", type: "Part-time" },
-    { id: 5, title: "Addetto/a pulizie (m/f/d)", company: "Hotel Alpino", location: "Bressanone", type: "Full-time" },
-    { id: 6, title: "Chef de rang (m/f/d)", company: "Ristorante Gourmet", location: "Merano", type: "Full-time" },
-    { id: 7, title: "Lavapiatti (m/f/d)", company: "Trattoria La Montagna", location: "Bolzano", type: "Part-time" },
-    { id: 8, title: "Commis di cucina (m/f/d)", company: "Hotel Luxury", location: "Brunico", type: "Full-time" },
-  ]
+  // Update customJobs titles when language changes
+  useEffect(() => {
+    setCustomJobs(prevCustomJobs => 
+      prevCustomJobs.map(customJob => {
+        // Extract job ID from value (format: "custom-{id}")
+        const jobId = typeof customJob.id === 'string' ? parseInt(customJob.id) : customJob.id
+        const title = getJobTitle(jobId, language)
+        if (title) {
+          return {
+            ...customJob,
+            title: title
+          }
+        }
+        return customJob
+      })
+    )
+  }, [language])
 
-  const filteredJobs = predefinedJobs.filter(
-    (job) =>
-      job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      job.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      job.location.toLowerCase().includes(searchQuery.toLowerCase()),
+  // Get all jobs from predefined list with translations for current language
+  const allJobsForModal = jobTitles.map((job) => {
+    const title = getJobTitle(job.id, language)
+    const description = getJobDescription(job.id, language)
+    return {
+      id: job.id,
+      title: title || job.titleIt,         // Für Anzeige (sprachabhängig)
+      description: description || job.it,   // Für Anzeige (sprachabhängig)
+      titleIt: job.titleIt,                // Für Suche
+      titleDe: job.titleDe,                // Für Suche
+      titleEn: job.titleEn,                // Für Suche
+      it: job.it,                          // Für Suche
+      de: job.de,                          // Für Suche
+      en: job.en,                          // Für Suche
+      aliases: job.aliases || [],
+    }
+  })
+
+  const filteredJobs = allJobsForModal.filter((job) => {
+    const q = searchQuery.toLowerCase()
+    return (
+      job.title.toLowerCase().includes(q) ||
+      job.titleIt.toLowerCase().includes(q) ||
+      job.titleDe.toLowerCase().includes(q) ||
+      job.titleEn.toLowerCase().includes(q) ||
+      job.it.toLowerCase().includes(q) ||
+      job.de.toLowerCase().includes(q) ||
+      job.en.toLowerCase().includes(q) ||
+      job.aliases.some((alias) => alias.toLowerCase().includes(q))
+    )
+  })
+
+  // Filter out jobs that are already selected (appear as custom job chips)
+  const jobsAvailableInModal = filteredJobs.filter(
+    (job) => !jobTypes.includes(`custom-${job.id}`)
   )
 
-  const handleJobSelect = (job: (typeof predefinedJobs)[0]) => {
+  const handleJobSelect = (job: { id: number; title: string; description: string }) => {
     const jobValue = `custom-${job.id}`
     const customJob: CustomJob = {
       id: job.id,
@@ -109,7 +150,7 @@ export default function JobFilters({
     }
 
     // Add to customJobs if not already there
-    if (!customJobs.find((j) => j.id === job.id)) {
+    if (!customJobs.find((j) => j.id === job.id && j.value === jobValue)) {
       setCustomJobs([...customJobs, customJob])
     }
 
@@ -127,7 +168,7 @@ export default function JobFilters({
     }
   }
 
-  const removeCustomJob = (jobId: number) => {
+  const removeCustomJob = (jobId: number | string) => {
     const jobValue = `custom-${jobId}`
     setCustomJobs(customJobs.filter((job) => job.id !== jobId))
     setJobTypes(jobTypes.filter((t) => t !== jobValue))
@@ -323,25 +364,23 @@ export default function JobFilters({
             </div>
           </DialogHeader>
 
-          <div className="overflow-y-auto max-h-[50vh] p-6 space-y-3">
-            {filteredJobs.length > 0 ? (
-              filteredJobs.map((job) => (
-                <button
-                  key={job.id}
-                  onClick={() => handleJobSelect(job)}
-                  className="w-full text-left p-5 rounded-[1.25rem] border-2 border-border/50 bg-card hover:border-primary hover:shadow-lg transition-all hover:scale-[1.02] space-y-2"
-                >
-                  <div className="font-bold text-lg text-foreground">{job.title}</div>
-                  <div className="text-sm text-muted-foreground">{job.company}</div>
-                  <div className="flex items-center gap-4 text-sm">
-                    <span className="flex items-center gap-1 text-primary">
-                      <MapPin className="w-4 h-4" />
-                      {job.location}
-                    </span>
-                    <span className="px-3 py-1 rounded-full bg-primary/10 text-primary font-medium">{job.type}</span>
-                  </div>
-                </button>
-              ))
+          <div className="overflow-y-auto max-h-[50vh] p-6">
+            {jobsAvailableInModal.length > 0 ? (
+              <div className="grid grid-cols-2 gap-3">
+                {jobsAvailableInModal.map((job) => (
+                  <button
+                    key={job.id}
+                    onClick={() => handleJobSelect(job)}
+                    className="text-left p-4 rounded-[1.25rem] border-2 border-border/50 bg-card hover:border-primary hover:shadow-lg transition-all hover:scale-[1.02] flex items-start gap-3"
+                  >
+                    <Briefcase className="w-5 h-5 md:w-6 md:h-6 text-primary flex-shrink-0 mt-0.5" />
+                    <div className="flex-1 min-w-0">
+                      <div className="font-bold text-base md:text-lg text-foreground mb-1">{job.title}</div>
+                      <div className="text-sm text-muted-foreground">{job.description}</div>
+                    </div>
+                  </button>
+                ))}
+              </div>
             ) : (
               <div className="text-center py-10 text-muted-foreground">
                 Nessun lavoro trovato. Prova con un'altra ricerca.

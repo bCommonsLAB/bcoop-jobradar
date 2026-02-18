@@ -1,6 +1,7 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
+import { useRouter } from "next/navigation"
 import { LanguageSelector } from "./language-selector"
 
 export type Language = "de" | "it" | "en" | "ar" | "hi" | "ur" | "tr" | "ro" | "pl" | "ru" | "zh" | "es" | "fr" | "pt" | "sq" | "mk" | "sr" | "hr" | "bs" | "bg" | "uk" | "bn"
@@ -24,6 +25,7 @@ export function useLanguage() {
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const router = useRouter()
 
   useEffect(() => {
     // Check if we're in the browser
@@ -41,11 +43,35 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     setIsLoading(false)
   }, [])
 
+  // Prüfe nach dem Laden, ob Benutzer mit gespeicherter Sprache die WelcomePage noch nicht gesehen hat
+  useEffect(() => {
+    if (!isLoading && language && typeof window !== "undefined") {
+      try {
+        const hasSeenWelcome = localStorage.getItem("job-radar-has-seen-welcome")
+        if (!hasSeenWelcome) {
+          // Weiterleitung zur WelcomePage, wenn Sprache bereits gespeichert ist, aber WelcomePage noch nicht gesehen
+          router.push("/")
+          localStorage.setItem("job-radar-has-seen-welcome", "true")
+        }
+      } catch (error) {
+        console.error("Error checking welcome flag:", error)
+      }
+    }
+  }, [isLoading, language, router])
+
   const setLanguage = (newLanguage: Language) => {
     setLanguageState(newLanguage)
     if (typeof window !== "undefined") {
       try {
         localStorage.setItem("job-radar-language", newLanguage)
+        
+        // Prüfe, ob der Benutzer bereits die WelcomePage gesehen hat
+        const hasSeenWelcome = localStorage.getItem("job-radar-has-seen-welcome")
+        if (!hasSeenWelcome) {
+          // Weiterleitung zur WelcomePage beim ersten Besuch
+          router.push("/")
+          localStorage.setItem("job-radar-has-seen-welcome", "true")
+        }
       } catch (error) {
         console.error("Error writing to localStorage:", error)
       }

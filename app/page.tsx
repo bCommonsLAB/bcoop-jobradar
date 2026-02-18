@@ -2,6 +2,7 @@
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
+import { useEffect } from "react"
 import { Search, Eye, Sparkles, Languages, Bell } from "lucide-react"
 import { useLanguage } from "@/components/language-provider"
 import { LanguageToggleButton } from "@/components/language-toggle-button"
@@ -11,6 +12,17 @@ export default function WelcomePage() {
   const router = useRouter()
   const { resetLanguage } = useLanguage()
   const { t } = useTranslation()
+
+  // Setze Flag, dass der Benutzer die WelcomePage gesehen hat
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem("job-radar-has-seen-welcome", "true")
+      } catch (error) {
+        console.error("Error setting welcome flag:", error)
+      }
+    }
+  }, [])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-accent/10 to-accent/20">
@@ -38,14 +50,6 @@ export default function WelcomePage() {
 
         <div className="absolute top-2 md:top-6 lg:top-8 right-2 md:right-6 lg:right-8 z-20 flex items-center gap-1.5 md:gap-4 lg:gap-5">
           <LanguageToggleButton />
-          <Button
-            variant="secondary"
-            size="sm"
-            className="bg-white/20 backdrop-blur-md hover:bg-white/30 text-white border border-white/30 rounded-xl shadow-lg transition-all duration-300"
-            onClick={() => router.push("/jobs")}
-          >
-            {t("nav.jobs")}
-          </Button>
         </div>
       </section>
 

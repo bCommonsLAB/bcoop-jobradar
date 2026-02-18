@@ -1,6 +1,5 @@
 "use client"
 
-import { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
@@ -12,7 +11,6 @@ import { useTranslation } from "@/hooks/use-translation"
 
 function ProfilePageContent() {
   const { t } = useTranslation()
-  const [showWhatsAppDetails, setShowWhatsAppDetails] = useState(false)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/15 via-accent/20 to-primary/10">
@@ -61,27 +59,10 @@ function ProfilePageContent() {
 
       <div className="max-w-6xl mx-auto px-2 md:px-5 pt-2 md:pt-3 space-y-2 md:space-y-3">
         <div className="flex flex-wrap gap-2 md:gap-3">
-          <button
-            type="button"
-            onClick={() => setShowWhatsAppDetails((prev) => !prev)}
-            className={`flex-1 min-w-0 py-2.5 md:py-3 px-3 md:px-4 rounded-xl border text-center text-sm md:text-base font-medium text-foreground cursor-pointer transition-all hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${showWhatsAppDetails ? "bg-primary/10 border-primary" : "bg-white/90 border-border"}`}
-          >
-            {t("notifications.whatsapp")}
-          </button>
           <div className="flex-1 min-w-0 py-2.5 md:py-3 px-3 md:px-4 rounded-xl bg-white/90 border border-border text-center text-sm md:text-base font-medium text-foreground">
             {t("notifications.email")}
           </div>
         </div>
-        {showWhatsAppDetails && (
-          <div className="flex flex-wrap gap-2 md:gap-3 justify-start max-w-md">
-            <div className="flex-1 min-w-0 py-2.5 md:py-3 px-3 md:px-4 rounded-xl bg-white/90 border border-border text-center text-sm md:text-base font-medium text-foreground">
-              {t("notifications.groups")}
-            </div>
-            <div className="flex-1 min-w-0 py-2.5 md:py-3 px-3 md:px-4 rounded-xl bg-white/90 border border-border text-center text-sm md:text-base font-medium text-foreground">
-              {t("profile.numbers")}
-            </div>
-          </div>
-        )}
       </div>
 
       <ScrollToTop />

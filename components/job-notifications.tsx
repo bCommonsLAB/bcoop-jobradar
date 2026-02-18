@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { Mail, MessageSquare, Check, ChevronDown, Filter } from "lucide-react"
+import { Mail, Check, ChevronDown, Filter } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -147,9 +147,7 @@ interface NotificationSettings {
   enabled: boolean
   frequency: "daily" | "weekly"
   emails: string[]
-  whatsappNumbers: string[]
   emailEnabled: boolean
-  whatsappEnabled: boolean
   selectedDays: string[]
   notificationTime: string
   filters: {
@@ -168,9 +166,7 @@ export default function JobNotifications({ filters: propsFilters }: JobNotificat
     enabled: false,
     frequency: "weekly",
     emails: [""],
-    whatsappNumbers: [""],
     emailEnabled: false,
-    whatsappEnabled: false,
     selectedDays: [],
     notificationTime: "06:00",
     filters: {
@@ -202,25 +198,18 @@ export default function JobNotifications({ filters: propsFilters }: JobNotificat
           // Stelle sicher, dass alle neuen Felder vorhanden sind (für alte gespeicherte Daten)
           // Migration: frequency immer auf "weekly" setzen (daily wurde entfernt)
           const migratedFrequency = "weekly"
-          // Migration: Alte einzelne email/whatsapp zu Arrays
+          // Migration: Alte einzelne email zu Arrays
           const migratedEmails = Array.isArray((parsed as { emails?: string[] }).emails)
             ? (parsed as { emails: string[] }).emails
             : (parsed as { email?: string }).email
               ? [(parsed as { email: string }).email]
-              : [""]
-          const migratedWhatsApp = Array.isArray((parsed as { whatsappNumbers?: string[] }).whatsappNumbers)
-            ? (parsed as { whatsappNumbers: string[] }).whatsappNumbers
-            : (parsed as { whatsapp?: string }).whatsapp
-              ? [(parsed as { whatsapp: string }).whatsapp]
               : [""]
           
           setSettings({
             enabled: parsed.enabled ?? false,
             frequency: migratedFrequency as "daily" | "weekly",
             emails: migratedEmails.length > 0 ? migratedEmails : [""],
-            whatsappNumbers: migratedWhatsApp.length > 0 ? migratedWhatsApp : [""],
             emailEnabled: parsed.emailEnabled ?? false,
-            whatsappEnabled: parsed.whatsappEnabled ?? false,
             selectedDays: parsed.selectedDays ?? [],
             notificationTime: parsed.notificationTime ?? "06:00",
               filters: parsed.filters
@@ -259,10 +248,6 @@ export default function JobNotifications({ filters: propsFilters }: JobNotificat
     saveSettings({ ...settings, emailEnabled: enabled })
   }
 
-  const handleWhatsAppToggle = (enabled: boolean) => {
-    saveSettings({ ...settings, whatsappEnabled: enabled })
-  }
-
   // Ein Textblock: Zeilen (oder Komma) in E-Mail-Liste parsen
   const parseLines = (text: string): string[] => {
     const lines = text.split(/\r?\n|,/).map((s) => s.trim()).filter(Boolean)
@@ -271,10 +256,6 @@ export default function JobNotifications({ filters: propsFilters }: JobNotificat
 
   const handleEmailsTextChange = (text: string) => {
     saveSettings({ ...settings, emails: parseLines(text) })
-  }
-
-  const handleWhatsAppTextChange = (text: string) => {
-    saveSettings({ ...settings, whatsappNumbers: parseLines(text) })
   }
 
   const handleFiltersChange = (newFilters: NotificationSettings["filters"]) => {
@@ -316,8 +297,8 @@ export default function JobNotifications({ filters: propsFilters }: JobNotificat
   }
 
   const handleActivate = () => {
-    // Validierung: Mindestens eine Versandart muss aktiviert sein
-    if (!settings.emailEnabled && !settings.whatsappEnabled) {
+    // Validierung: E-Mail muss aktiviert sein
+    if (!settings.emailEnabled) {
       return
     }
 
@@ -328,11 +309,6 @@ export default function JobNotifications({ filters: propsFilters }: JobNotificat
 
     // Validierung: Mindestens eine gültige E-Mail, wenn E-Mail aktiviert ist
     if (settings.emailEnabled && !settings.emails.some((e) => e.trim())) {
-      return
-    }
-
-    // Validierung: Mindestens eine gültige WhatsApp-Nummer, wenn WhatsApp aktiviert ist
-    if (settings.whatsappEnabled && !settings.whatsappNumbers.some((w) => w.trim())) {
       return
     }
 
@@ -354,7 +330,7 @@ export default function JobNotifications({ filters: propsFilters }: JobNotificat
 
   const handleUpdate = () => {
     // Gleiche Validierung wie bei Aktivierung
-    if (!settings.emailEnabled && !settings.whatsappEnabled) {
+    if (!settings.emailEnabled) {
       return
     }
 
@@ -364,9 +340,6 @@ export default function JobNotifications({ filters: propsFilters }: JobNotificat
     }
 
     if (settings.emailEnabled && !settings.emails.some((e) => e.trim())) {
-      return
-    }
-    if (settings.whatsappEnabled && !settings.whatsappNumbers.some((w) => w.trim())) {
       return
     }
 
@@ -512,25 +485,6 @@ export default function JobNotifications({ filters: propsFilters }: JobNotificat
                     />
                   </div>
                 )}
-
-                <div className="flex items-center justify-between p-2.5 md:p-3 rounded-lg md:rounded-xl border border-border">
-                  <div className="flex items-center gap-2 md:gap-3">
-                    <MessageSquare className="w-4 h-4 md:w-5 md:h-5 text-primary" />
-                    <span className="text-xs md:text-sm font-medium">{t("notifications.whatsapp")}</span>
-                  </div>
-                  <Switch checked={settings.whatsappEnabled} onCheckedChange={handleWhatsAppToggle} />
-                </div>
-                {settings.whatsappEnabled && (
-                  <div className="mt-1.5 md:mt-2">
-                    <Textarea
-                      placeholder={t("notifications.whatsappNumbersPlaceholder") || "Eine Nummer pro Zeile (oder durch Komma getrennt)"}
-                      value={settings.whatsappNumbers.filter(Boolean).join("\n")}
-                      onChange={(e) => handleWhatsAppTextChange(e.target.value)}
-                      className="min-h-[80px] text-xs md:text-sm resize-y"
-                      rows={3}
-                    />
-                  </div>
-                )}
               </div>
             </div>
 
@@ -600,25 +554,6 @@ export default function JobNotifications({ filters: propsFilters }: JobNotificat
                   />
                 </div>
               )}
-
-              <div className="flex items-center justify-between p-2.5 md:p-3 rounded-lg md:rounded-xl border border-border">
-                <div className="flex items-center gap-2 md:gap-3">
-                  <MessageSquare className="w-4 h-4 md:w-5 md:h-5 text-primary" />
-                  <span className="text-xs md:text-sm font-medium">{t("notifications.whatsapp")}</span>
-                </div>
-                <Switch checked={settings.whatsappEnabled} onCheckedChange={handleWhatsAppToggle} />
-              </div>
-              {settings.whatsappEnabled && (
-                <div className="mt-1.5 md:mt-2">
-                  <Textarea
-                    placeholder={t("notifications.whatsappNumbersPlaceholder") || "Eine Nummer pro Zeile (oder durch Komma getrennt)"}
-                    value={settings.whatsappNumbers.filter(Boolean).join("\n")}
-                    onChange={(e) => handleWhatsAppTextChange(e.target.value)}
-                    className="min-h-[80px] text-xs md:text-sm resize-y"
-                    rows={3}
-                  />
-                </div>
-              )}
             </div>
           </div>
 
@@ -626,9 +561,8 @@ export default function JobNotifications({ filters: propsFilters }: JobNotificat
           <Button
             onClick={handleActivate}
             disabled={
-              (!settings.emailEnabled && !settings.whatsappEnabled) ||
+              !settings.emailEnabled ||
               (settings.emailEnabled && !settings.emails.some((e) => e.trim())) ||
-              (settings.whatsappEnabled && !settings.whatsappNumbers.some((w) => w.trim())) ||
               settings.selectedDays.length === 0 ||
               !settings.notificationTime
             }

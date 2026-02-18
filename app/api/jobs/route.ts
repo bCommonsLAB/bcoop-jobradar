@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getConfiguredCollection } from "@/lib/mongodb-service"
+import { getConfiguredCollection, resetMongoConnection } from "@/lib/mongodb-service"
 import { normalizeJobDocument, type Job, type JobCreateInput, type JobCreateRequest } from "@/lib/job"
 import { JobRepository } from "@/lib/job-repository"
 
@@ -35,8 +35,32 @@ export async function GET() {
       }
     )
   } catch (error) {
+    console.error('[API] GET /api/jobs - Fehler:', error)
     const message = error instanceof Error ? error.message : "Unbekannter Fehler"
-    return NextResponse.json({ error: message }, { status: 500 })
+    const stack = error instanceof Error ? error.stack : undefined
+    console.error('[API] GET /api/jobs - Fehlermeldung:', message)
+    if (stack) {
+      console.error('[API] GET /api/jobs - Stack:', stack)
+    }
+    
+    // Bei DNS-Fehlern die Verbindung zurücksetzen, damit beim nächsten Versuch die neue Implementierung verwendet wird
+    if (message.includes('ECONNREFUSED') || message.includes('querySrv')) {
+      console.log('[API] DNS-Fehler erkannt, setze MongoDB-Verbindung zurück...')
+      resetMongoConnection()
+    }
+    
+    // Bessere Fehlermeldung für häufige MongoDB-Verbindungsprobleme
+    let userFriendlyMessage = message
+    if (message.includes('ECONNREFUSED') || message.includes('querySrv')) {
+      userFriendlyMessage = 'MongoDB-Verbindung fehlgeschlagen. Bitte überprüfen Sie die MONGODB_URI in der .env-Datei und stellen Sie sicher, dass der MongoDB-Cluster erreichbar ist.'
+    } else if (message.includes('MONGODB_URI') || message.includes('MONGODB_DATABASE_NAME') || message.includes('MONGODB_COLLECTION_NAME')) {
+      userFriendlyMessage = `Konfigurationsfehler: ${message}. Bitte überprüfen Sie Ihre .env-Datei.`
+    }
+    
+    return NextResponse.json({ 
+      error: userFriendlyMessage,
+      details: process.env.NODE_ENV === 'development' ? message : undefined
+    }, { status: 500 })
   }
 }
 
