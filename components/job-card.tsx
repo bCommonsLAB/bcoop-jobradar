@@ -12,6 +12,7 @@ import { iconSizes } from "@/lib/icon-sizes"
 import { isJobLiked, toggleLike } from "@/lib/liked-jobs"
 import { getDomainFromUrl } from "@/lib/url-utils"
 import { cn } from "@/lib/utils"
+import { getStartDateDisplay } from "@/lib/format-job-date"
 import type { Job } from "@/lib/job"
 
 interface JobCardProps {
@@ -85,7 +86,7 @@ export default function JobCard({ job, onSelect }: JobCardProps) {
         
         <div className="flex flex-col h-full">
           {/* Company Image - Kompakter */}
-          <div className="relative w-full h-24 md:h-28 flex-shrink-0 bg-gradient-to-br from-primary/10 to-accent/10">
+          <div className="relative w-full h-24 md:h-28 flex-shrink-0 bg-gradient-to-br from-primary/5 to-primary/10">
             <div className="absolute inset-0 flex items-center justify-center p-2 md:p-2.5">
               <Image
                 src={getJobImage(job.title) || "/placeholder.svg"}
@@ -118,18 +119,20 @@ export default function JobCard({ job, onSelect }: JobCardProps) {
                   <span className="text-xs md:text-sm font-semibold truncate block">{job.location}</span>
                 </div>
               </div>
-              <div className="flex items-center gap-2.5 md:gap-3 px-3 py-2 md:px-4 md:py-2.5 rounded-xl md:rounded-2xl bg-muted/40">
-                <div className="p-1.5 md:p-2 rounded-lg md:rounded-xl bg-accent/20 flex-shrink-0">
-                  <Calendar className={`${iconSizes.sm} text-accent-foreground`} />
+              {getStartDateDisplay(job.startDate) !== null && (
+                <div className="flex items-center gap-2.5 md:gap-3 px-3 py-2 md:px-4 md:py-2.5 rounded-xl md:rounded-2xl bg-muted/40">
+                  <div className="p-1.5 md:p-2 rounded-lg md:rounded-xl bg-primary/10 flex-shrink-0">
+                    <Calendar className={`${iconSizes.sm} text-primary`} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-[9px] md:text-xs text-muted-foreground block">Startdatum</span>
+                    <span className="text-xs md:text-sm font-semibold truncate block">{getStartDateDisplay(job.startDate)}</span>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <span className="text-[9px] md:text-xs text-muted-foreground block">Startdatum</span>
-                  <span className="text-xs md:text-sm font-semibold truncate block">Da {job.startDate}</span>
-                </div>
-              </div>
+              )}
               <div className="flex items-center gap-2.5 md:gap-3 px-3 py-2 md:px-4 md:py-2.5 rounded-xl md:rounded-2xl bg-muted/40">
-                <div className="p-1.5 md:p-2 rounded-lg md:rounded-xl bg-secondary/20 flex-shrink-0">
-                  <Briefcase className={`${iconSizes.sm} text-secondary-foreground`} />
+                <div className="p-1.5 md:p-2 rounded-lg md:rounded-xl bg-primary/10 flex-shrink-0">
+                  <Briefcase className={`${iconSizes.sm} text-primary`} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <span className="text-[9px] md:text-xs text-muted-foreground block">Arbeitszeit</span>
@@ -142,14 +145,14 @@ export default function JobCard({ job, onSelect }: JobCardProps) {
             {(job.hasAccommodation || job.hasMeals) && (
               <div className="flex flex-wrap gap-1.5 flex-shrink-0">
                 {job.hasAccommodation && (
-                  <Badge variant="secondary" className="flex items-center gap-1.5 px-2 py-0.5 md:px-2.5 md:py-1 bg-gradient-to-r from-purple-50 to-purple-100 text-purple-700 border border-purple-200">
-                    <Home className={iconSizes.sm} />
+                  <Badge variant="secondary" className="flex items-center gap-1.5 px-2 py-0.5 md:px-2.5 md:py-1 bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    <Home className={`${iconSizes.sm} text-emerald-700`} />
                     <span className="text-[10px] md:text-xs font-semibold">Alloggio</span>
                   </Badge>
                 )}
                 {job.hasMeals && (
-                  <Badge variant="secondary" className="flex items-center gap-1.5 px-2 py-0.5 md:px-2.5 md:py-1 bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 border border-blue-200">
-                    <Utensils className={iconSizes.sm} />
+                  <Badge variant="secondary" className="flex items-center gap-1.5 px-2 py-0.5 md:px-2.5 md:py-1 bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    <Utensils className={`${iconSizes.sm} text-emerald-700`} />
                     <span className="text-[10px] md:text-xs font-semibold">Vitto</span>
                   </Badge>
                 )}
@@ -160,7 +163,7 @@ export default function JobCard({ job, onSelect }: JobCardProps) {
             <div className="flex flex-col gap-1.5 pt-1.5 mt-auto">
               <Button
                 size="sm"
-                className="w-full bg-gradient-to-r from-primary via-primary/90 to-accent hover:from-primary/90 hover:via-primary/80 hover:to-accent/90 text-white font-bold rounded-lg md:rounded-xl shadow-md hover:shadow-xl transition-all duration-300 hover:scale-[1.02] active:scale-95 py-1 md:py-2 text-[10px] md:text-sm"
+                className="w-full bg-primary hover:bg-primary/90 text-white font-bold rounded-lg md:rounded-xl shadow-lg shadow-primary/20 transition-all duration-300 hover:scale-[1.02] active:scale-95 py-5 text-[10px] md:text-sm"
                 asChild
                 onClick={handleContact}
                 aria-label={`${t("jobCard.call")} ${job.company}`}
@@ -172,7 +175,7 @@ export default function JobCard({ job, onSelect }: JobCardProps) {
               </Button>
               <Button
                 size="sm"
-                className="w-full bg-gradient-to-r from-secondary via-secondary/90 to-accent hover:from-secondary/90 hover:via-secondary/80 hover:to-accent/90 text-white font-bold rounded-lg md:rounded-xl shadow-md hover:shadow-xl transition-all duration-300 hover:scale-[1.02] active:scale-95 py-1 md:py-2 text-[10px] md:text-sm"
+                className="w-full bg-primary hover:bg-primary/90 text-white font-bold rounded-lg md:rounded-xl shadow-lg shadow-primary/20 transition-all duration-300 hover:scale-[1.02] active:scale-95 py-5 text-[10px] md:text-sm"
                 asChild
                 onClick={handleContact}
                 aria-label={`${t("jobCard.email")} ${job.company}`}
@@ -185,18 +188,18 @@ export default function JobCard({ job, onSelect }: JobCardProps) {
               <Button
                 size="sm"
                 variant="outline"
-                className="w-full border-2 border-border bg-card hover:bg-accent rounded-lg md:rounded-xl transition-all duration-300 hover:shadow-lg hover:scale-[1.02] active:scale-95 py-1 md:py-2 text-[10px] md:text-sm"
+                className="w-full border-2 border-border bg-card hover:bg-accent rounded-lg md:rounded-xl transition-all duration-300 hover:shadow-lg hover:scale-[1.02] active:scale-95 py-5 text-[10px] md:text-sm"
                 onClick={() => setIsModalOpen(true)}
-                aria-label={`${t("jobCard.details")} für ${job.title}`}
+                aria-label={`${t("jobCard.moreInfo")} für ${job.title}`}
               >
                 <FileText className={iconSizes.sm} />
-                {t("jobCard.details")}
+                {t("jobCard.moreInfo")}
               </Button>
               {job.sourceUrl && (
                 <Button
                   size="sm"
                   variant="outline"
-                  className="w-full border-2 border-border bg-card hover:bg-accent rounded-lg md:rounded-xl transition-all duration-300 hover:shadow-lg hover:scale-[1.02] active:scale-95 py-1 md:py-2 text-[10px] md:text-sm"
+                  className="w-full border-2 border-border bg-card hover:bg-accent rounded-lg md:rounded-xl transition-all duration-300 hover:shadow-lg hover:scale-[1.02] active:scale-95 py-5 text-[10px] md:text-sm"
                   asChild
                   aria-label={`${t("jobCard.moreInfoOn")} ${getDomainFromUrl(job.sourceUrl)} für ${job.title}`}
                 >
