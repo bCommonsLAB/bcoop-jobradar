@@ -359,24 +359,24 @@ export default function JobFilters({
                 placeholder={t("filters.searchPlaceholder")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-12 py-6 text-base rounded-[1rem] border-2 focus:border-primary"
+                className="pl-12 py-6 text-sm md:text-base rounded-[1rem] border-2 focus:border-primary overflow-hidden"
               />
             </div>
           </DialogHeader>
 
-          <div className="overflow-y-auto max-h-[50vh] p-6">
+          <div className="overflow-y-auto max-h-[50vh] p-4 md:p-6">
             {jobsAvailableInModal.length > 0 ? (
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2 md:gap-3">
                 {jobsAvailableInModal.map((job) => (
                   <button
                     key={job.id}
                     onClick={() => handleJobSelect(job)}
-                    className="text-left p-4 rounded-[1.25rem] border-2 border-border/50 bg-card hover:border-primary hover:shadow-lg transition-all hover:scale-[1.02] flex items-start gap-3"
+                    className="text-left p-3 md:p-4 rounded-[1.25rem] border-2 border-border/50 bg-card hover:border-primary hover:shadow-lg transition-all hover:scale-[1.02] flex items-start gap-2 md:gap-3"
                   >
                     <Briefcase className="w-5 h-5 md:w-6 md:h-6 text-primary flex-shrink-0 mt-0.5" />
                     <div className="flex-1 min-w-0">
-                      <div className="font-bold text-base md:text-lg text-foreground mb-1">{job.title}</div>
-                      <div className="text-sm text-muted-foreground">{job.description}</div>
+                      <div className="font-bold text-sm md:text-base lg:text-lg text-foreground mb-1 line-clamp-2 break-words">{job.title}</div>
+                      <div className="text-xs md:text-sm text-muted-foreground line-clamp-2 break-words">{job.description}</div>
                     </div>
                   </button>
                 ))}

@@ -199,13 +199,15 @@ export default function JobCard({ job, onSelect }: JobCardProps) {
                 <Button
                   size="sm"
                   variant="outline"
-                  className="w-full border-2 border-border bg-card hover:bg-accent rounded-lg md:rounded-xl transition-all duration-300 hover:shadow-lg hover:scale-[1.02] active:scale-95 py-5 text-[10px] md:text-sm"
+                  className="w-full border-2 border-border bg-card hover:bg-accent rounded-lg md:rounded-xl transition-all duration-300 hover:shadow-lg hover:scale-[1.02] active:scale-95 py-5 text-[10px] md:text-sm overflow-hidden"
                   asChild
                   aria-label={`${t("jobCard.moreInfoOn")} ${getDomainFromUrl(job.sourceUrl)} für ${job.title}`}
                 >
-                  <a href={job.sourceUrl} target="_blank" rel="noopener noreferrer">
-                    <ExternalLink className={iconSizes.sm} />
-                    {t("jobCard.moreInfoOn")} {getDomainFromUrl(job.sourceUrl)}
+                  <a href={job.sourceUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 min-w-0 w-full">
+                    <ExternalLink className={`${iconSizes.sm} flex-shrink-0`} />
+                    <span className="break-words min-w-0 flex-1 text-left line-clamp-2 overflow-hidden">
+                      {t("jobCard.moreInfoOn")} {getDomainFromUrl(job.sourceUrl)}
+                    </span>
                   </a>
                 </Button>
               )}
