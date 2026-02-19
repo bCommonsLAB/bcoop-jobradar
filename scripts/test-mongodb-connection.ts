@@ -54,7 +54,8 @@ async function testConnection() {
     const dbs = await adminDb.listDatabases()
     console.log('📊 Verfügbare Datenbanken:')
     dbs.databases.forEach(db => {
-      console.log(`  - ${db.name} (${(db.sizeOnDisk / 1024 / 1024).toFixed(2)} MB)`)
+      const sizeMB = db.sizeOnDisk ? (db.sizeOnDisk / 1024 / 1024).toFixed(2) : 'N/A'
+      console.log(`  - ${db.name} (${sizeMB} MB)`)
     })
     
     // Teste Collection-Zugriff
