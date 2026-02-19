@@ -24,8 +24,6 @@ export interface StructuredJobData {
   jobType?: string
   phone?: string
   email?: string
-  description?: string
-
   // Optionale Felder
   hasAccommodation?: boolean | string
   hasMeals?: boolean | string
@@ -86,10 +84,10 @@ const JOB_TYPE_KEYWORDS: Record<JobType, string[]> = {
 }
 
 /**
- * Versucht jobType aus title oder description zu erkennen
+ * Versucht jobType aus title zu erkennen
  */
-function inferJobType(title?: string, description?: string): JobType | null {
-  const searchText = `${title || ''} ${description || ''}`.toLowerCase()
+function inferJobType(title?: string): JobType | null {
+  const searchText = `${title || ''}`.toLowerCase()
 
   for (const [jobType, keywords] of Object.entries(JOB_TYPE_KEYWORDS)) {
     if (jobType === 'all') continue
@@ -209,11 +207,6 @@ export function mapStructuredDataToJob(data: StructuredJobData): JobCreateInput 
     errors.push('email ist erforderlich')
   }
 
-  const description = data.description?.trim()
-  if (!description || description.length === 0) {
-    errors.push('description ist erforderlich')
-  }
-
   // locationRegion mappen oder validieren
   let locationRegion = data.locationRegion?.trim()
   if (!locationRegion || locationRegion.length === 0) {
@@ -247,11 +240,11 @@ export function mapStructuredDataToJob(data: StructuredJobData): JobCreateInput 
   }
 
   if (!jobType) {
-    const inferred = inferJobType(title, description)
+    const inferred = inferJobType(title)
     if (inferred) {
       jobType = inferred
     } else {
-      errors.push(`jobType konnte nicht aus title/description abgeleitet werden`)
+      errors.push(`jobType konnte nicht aus title abgeleitet werden`)
     }
   }
 
@@ -272,7 +265,6 @@ export function mapStructuredDataToJob(data: StructuredJobData): JobCreateInput 
     jobType: jobType!,
     phone: phone!,
     email: email!,
-    description: description!,
 
     // Optionale Felder mit Defaults
     hasAccommodation: toBoolean(data.hasAccommodation),

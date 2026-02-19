@@ -19,10 +19,17 @@ const repository = new JobRepository()
  * Gibt eine Liste von Jobs zurück
  */
 export async function GET() {
+  const startTime = Date.now()
+  console.log('[API] GET /api/jobs - Start')
   try {
+    console.log('[API] GET /api/jobs - Verbinde mit MongoDB...')
     const collection = await getConfiguredCollection<JobDocument>()
+    console.log('[API] GET /api/jobs - MongoDB verbunden, lade Jobs...')
     const docs = await collection.find({}).toArray()
+    console.log('[API] GET /api/jobs - Jobs geladen:', docs.length, 'Dokumente')
     const jobs = docs.map(normalizeJobDocument)
+    const duration = Date.now() - startTime
+    console.log('[API] GET /api/jobs - Erfolg nach', duration, 'ms')
 
     return NextResponse.json(
       { jobs },
@@ -94,7 +101,6 @@ export async function POST(request: NextRequest) {
       'jobType',
       'phone',
       'email',
-      'description',
     ]
 
     for (let i = 0; i < body.jobs.length; i++) {

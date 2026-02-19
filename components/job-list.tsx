@@ -68,30 +68,95 @@ export default function JobList({ filters, onJobSelect }: JobListProps) {
   useEffect(() => {
     let isCancelled = false
     const controller = new AbortController()
+    let timeoutId: NodeJS.Timeout | null = null
 
     async function loadJobs() {
       setIsFetchingJobs(true)
       setLoadError(null)
+      let timeoutTriggered = false
 
       try {
+        console.log('[JobList] Starte Job-Laden von /api/jobs')
+        
+        // Timeout hinzufügen
+        timeoutId = setTimeout(() => {
+          if (!isCancelled) {
+            timeoutTriggered = true
+            console.warn('[JobList] Timeout erreicht, breche Anfrage ab')
+            controller.abort('Timeout: Anfrage hat zu lange gedauert')
+          }
+        }, 10000) // 10 Sekunden Timeout
+
         const res = await fetch("/api/jobs", { signal: controller.signal })
+        
+        // Timeout-Cleanup nur wenn die Anfrage erfolgreich war
+        if (timeoutId) {
+          clearTimeout(timeoutId)
+          timeoutId = null
+        }
+        
+        console.log('[JobList] API Response Status:', res.status, res.ok)
+
         if (!res.ok) {
-          // Die API liefert i.d.R. { error }, wir zeigen aber nur eine kurze Message.
-          throw new Error(`Jobs konnten nicht geladen werden (HTTP ${res.status}).`)
+          // Versuche JSON-Antwort zu parsen für detaillierte Fehlermeldung
+          let errorMessage = `Jobs konnten nicht geladen werden (HTTP ${res.status}).`
+          try {
+            const errorData = await res.json()
+            if (errorData.error) {
+              errorMessage = errorData.error
+              if (errorData.details && process.env.NODE_ENV === 'development') {
+                errorMessage += `\nDetails: ${errorData.details}`
+              }
+            }
+          } catch {
+            // Wenn JSON-Parsing fehlschlägt, verwende Standard-Nachricht
+          }
+          throw new Error(errorMessage)
         }
 
         const data = (await res.json()) as { jobs?: Job[] }
+        console.log('[JobList] Jobs geladen:', data.jobs?.length || 0, 'Jobs')
         if (!isCancelled) {
           setJobs(data.jobs ?? [])
         }
       } catch (error) {
-        // AbortError ist erwartbar beim Unmount.
-        if (!isCancelled && !(error instanceof DOMException && error.name === "AbortError")) {
-          const message = error instanceof Error ? error.message : "Unbekannter Fehler"
+        // Timeout-Cleanup auch bei Fehler
+        if (timeoutId) {
+          clearTimeout(timeoutId)
+          timeoutId = null
+        }
+        
+        // AbortError ist erwartbar beim Unmount oder Timeout
+        const isAbortError = error instanceof DOMException && error.name === "AbortError"
+        
+        // Nur Fehler anzeigen, wenn die Komponente noch gemountet ist und es kein erwarteter Abort ist
+        if (!isCancelled && (!isAbortError || timeoutTriggered)) {
+          let message = error instanceof Error ? error.message : "Unbekannter Fehler"
+          
+          // Spezielle Behandlung für Timeout
+          if (timeoutTriggered) {
+            message = "Zeitüberschreitung: Die Anfrage hat zu lange gedauert. Bitte versuchen Sie es erneut."
+          }
+          // Spezielle Behandlung für Network-Fehler
+          else if (error instanceof TypeError && error.message.includes('fetch')) {
+            message = "Netzwerkfehler: Die Verbindung zum Server konnte nicht hergestellt werden. Stellen Sie sicher, dass der Server läuft."
+          }
+          
+          console.error('[JobList] Zeige Fehler:', message)
           setLoadError(message)
           setJobs([])
+          setIsFetchingJobs(false)
+        } else if (isAbortError && !timeoutTriggered) {
+          // Erwarteter Abort beim Unmount - kein Fehler anzeigen
+          console.log('[JobList] Anfrage wurde abgebrochen (Komponente unmounted)')
         }
       } finally {
+        // Timeout-Cleanup sicherstellen
+        if (timeoutId) {
+          clearTimeout(timeoutId)
+          timeoutId = null
+        }
+        
         if (!isCancelled) {
           setIsFetchingJobs(false)
         }
@@ -102,7 +167,14 @@ export default function JobList({ filters, onJobSelect }: JobListProps) {
 
     return () => {
       isCancelled = true
-      controller.abort()
+      // Timeout-Cleanup vor dem Abort
+      if (timeoutId) {
+        clearTimeout(timeoutId)
+      }
+      // Abort mit Grund, um "signal is aborted without reason" zu vermeiden
+      if (!controller.signal.aborted) {
+        controller.abort('Komponente wurde unmounted')
+      }
     }
   }, [])
 
@@ -269,8 +341,8 @@ export default function JobList({ filters, onJobSelect }: JobListProps) {
           `${sortedJobs.length} ${t("jobList.jobsFound")}`
         )}
       </h2>
-      {!isLoading && loadError && (
-        <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs md:text-sm text-red-700">
+      {loadError && (
+        <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs md:text-sm text-red-700 whitespace-pre-line">
           {loadError}
         </div>
       )}

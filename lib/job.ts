@@ -28,7 +28,6 @@ export interface Job {
   hasMeals: boolean
 
   // Beschreibungen
-  description: string
   companyDescription?: string
   companyWebsite?: string
   companyAddress?: string

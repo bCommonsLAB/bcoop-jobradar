@@ -143,9 +143,9 @@ function getMongoClientPromise(): Promise<MongoClient> {
   if (!globalThis.__jobradarMongoClientPromise) {
     // Verbindungsoptionen für robustere Verbindung
     const clientOptions = {
-      serverSelectionTimeoutMS: 30000, // 30 Sekunden Timeout für Server-Auswahl
-      connectTimeoutMS: 30000, // 30 Sekunden Timeout für Verbindungsaufbau
-      socketTimeoutMS: 45000, // 45 Sekunden Timeout für Socket-Operationen
+      serverSelectionTimeoutMS: 10000, // 10 Sekunden Timeout für Server-Auswahl (reduziert von 30s)
+      connectTimeoutMS: 10000, // 10 Sekunden Timeout für Verbindungsaufbau (reduziert von 30s)
+      socketTimeoutMS: 15000, // 15 Sekunden Timeout für Socket-Operationen (reduziert von 45s)
       retryWrites: true,
       retryReads: true,
     }

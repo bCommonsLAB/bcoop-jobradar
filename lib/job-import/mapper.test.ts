@@ -10,7 +10,6 @@ describe("mapStructuredDataToJob", () => {
     startDate: "01.02.2025",
     phone: "+39 0471 123456",
     email: "jobs@restaurant-test.it",
-    description: "Wir suchen einen erfahrenen Koch",
   }
 
   it("mappt gültige Job-Daten erfolgreich", () => {
@@ -24,7 +23,6 @@ describe("mapStructuredDataToJob", () => {
     expect(result.startDate).toBe("01.02.2025")
     expect(result.phone).toBe("+39 0471 123456")
     expect(result.email).toBe("jobs@restaurant-test.it")
-    expect(result.description).toBe("Wir suchen einen erfahrenen Koch")
     expect(result.jobType).toBeDefined() // Sollte automatisch erkannt werden
     expect(result.hasAccommodation).toBe(false) // Default
     expect(result.hasMeals).toBe(false) // Default
@@ -41,10 +39,10 @@ describe("mapStructuredDataToJob", () => {
     expect(result.jobType).toBe("kitchen")
   })
 
-  it("erkennt jobType aus description", () => {
+  it("erkennt jobType aus title mit Keywords", () => {
     const data: StructuredJobData = {
       ...validJobData,
-      description: "Wir suchen einen Spüler",
+      title: "Lavapiatti",
     }
 
     const result = mapStructuredDataToJob(data)
@@ -158,7 +156,7 @@ describe("mapStructuredDataToJob", () => {
     const data: StructuredJobData = {
       ...validJobData,
       title: "Unbekannter Job-Typ XYZ",
-      description: "Keine Keywords",
+      title: "Unbekannter Job Titel",
     }
 
     expect(() => mapStructuredDataToJob(data)).toThrow("jobType konnte nicht")

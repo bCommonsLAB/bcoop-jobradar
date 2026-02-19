@@ -8,6 +8,8 @@ import { Phone, Mail, MapPin, Calendar, Home, Utensils, Briefcase, ExternalLink,
 import { Badge } from "@/components/ui/badge"
 import JobDetailModal from "./job-detail-modal"
 import { useTranslation } from "@/hooks/use-translation"
+import { useLanguage } from "@/components/language-provider"
+import { translateJobContent, translateEmploymentType } from "@/lib/job-translation"
 import { iconSizes } from "@/lib/icon-sizes"
 import { isJobLiked, toggleLike } from "@/lib/liked-jobs"
 import { getDomainFromUrl } from "@/lib/url-utils"
@@ -24,6 +26,10 @@ export default function JobCard({ job, onSelect }: JobCardProps) {
   const [isLiked, setIsLiked] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const { t } = useTranslation()
+  const { language } = useLanguage()
+  
+  // Übersetze Job-Inhalte basierend auf der ausgewählten Sprache
+  const translatedJob = translateJobContent(job, language)
 
   // Prüfe Like-Status beim Mount
   useEffect(() => {
@@ -89,7 +95,7 @@ export default function JobCard({ job, onSelect }: JobCardProps) {
           <div className="relative w-full h-24 md:h-28 flex-shrink-0 bg-gradient-to-br from-primary/5 to-primary/10">
             <div className="absolute inset-0 flex items-center justify-center p-2 md:p-2.5">
               <Image
-                src={getJobImage(job.title) || "/placeholder.svg"}
+                src={getJobImage(translatedJob.title) || "/placeholder.svg"}
                 alt={job.company}
                 width={120}
                 height={120}
@@ -104,7 +110,7 @@ export default function JobCard({ job, onSelect }: JobCardProps) {
           <div className="flex-1 p-3 md:p-5 lg:p-6 space-y-2 md:space-y-3 lg:space-y-4 flex flex-col">
             {/* Header: Title and Company - Kompakter */}
             <div className="flex-shrink-0">
-              <h3 className="text-xs md:text-base lg:text-lg font-bold text-foreground leading-tight mb-0.5 tracking-tight line-clamp-2">{job.title}</h3>
+              <h3 className="text-xs md:text-base lg:text-lg font-bold text-foreground leading-tight mb-0.5 tracking-tight line-clamp-2">{translatedJob.title}</h3>
               <p className="text-[10px] md:text-sm font-semibold text-primary tracking-normal line-clamp-1">{job.company}</p>
             </div>
 
@@ -115,7 +121,7 @@ export default function JobCard({ job, onSelect }: JobCardProps) {
                   <MapPin className={`${iconSizes.sm} text-primary`} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <span className="text-[9px] md:text-xs text-muted-foreground block">Ort</span>
+                  <span className="text-[9px] md:text-xs text-muted-foreground block">{t("jobCard.location")}</span>
                   <span className="text-xs md:text-sm font-semibold truncate block">{job.location}</span>
                 </div>
               </div>
@@ -125,7 +131,7 @@ export default function JobCard({ job, onSelect }: JobCardProps) {
                     <Calendar className={`${iconSizes.sm} text-primary`} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <span className="text-[9px] md:text-xs text-muted-foreground block">Startdatum</span>
+                    <span className="text-[9px] md:text-xs text-muted-foreground block">{t("jobCard.startDate")}</span>
                     <span className="text-xs md:text-sm font-semibold truncate block">{getStartDateDisplay(job.startDate)}</span>
                   </div>
                 </div>
@@ -135,8 +141,8 @@ export default function JobCard({ job, onSelect }: JobCardProps) {
                   <Briefcase className={`${iconSizes.sm} text-primary`} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <span className="text-[9px] md:text-xs text-muted-foreground block">Arbeitszeit</span>
-                  <span className="text-xs md:text-sm font-semibold truncate block">{job.employmentType}</span>
+                  <span className="text-[9px] md:text-xs text-muted-foreground block">{t("jobCard.workingHours")}</span>
+                  <span className="text-xs md:text-sm font-semibold truncate block">{translateEmploymentType(job.employmentType, language)}</span>
                 </div>
               </div>
             </div>
@@ -180,7 +186,7 @@ export default function JobCard({ job, onSelect }: JobCardProps) {
                 onClick={handleContact}
                 aria-label={`${t("jobCard.email")} ${job.company}`}
               >
-                <a href={`mailto:${job.email}?subject=Candidatura: ${job.title}`}>
+                <a href={`mailto:${job.email}?subject=Candidatura: ${translatedJob.title}`}>
                   <Mail className={iconSizes.sm} />
                   {t("jobCard.email")}
                 </a>
@@ -190,7 +196,7 @@ export default function JobCard({ job, onSelect }: JobCardProps) {
                 variant="outline"
                 className="w-full border-2 border-border bg-card hover:bg-accent rounded-lg md:rounded-xl transition-all duration-300 hover:shadow-lg hover:scale-[1.02] active:scale-95 py-5 text-[10px] md:text-sm"
                 onClick={() => setIsModalOpen(true)}
-                aria-label={`${t("jobCard.moreInfo")} für ${job.title}`}
+                aria-label={`${t("jobCard.moreInfo")} für ${translatedJob.title}`}
               >
                 <FileText className={iconSizes.sm} />
                 {t("jobCard.moreInfo")}
@@ -201,7 +207,7 @@ export default function JobCard({ job, onSelect }: JobCardProps) {
                   variant="outline"
                   className="w-full border-2 border-border bg-card hover:bg-accent rounded-lg md:rounded-xl transition-all duration-300 hover:shadow-lg hover:scale-[1.02] active:scale-95 py-5 text-[10px] md:text-sm overflow-hidden"
                   asChild
-                  aria-label={`${t("jobCard.moreInfoOn")} ${getDomainFromUrl(job.sourceUrl)} für ${job.title}`}
+                  aria-label={`${t("jobCard.moreInfoOn")} ${getDomainFromUrl(job.sourceUrl)} für ${translatedJob.title}`}
                 >
                   <a href={job.sourceUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 min-w-0 w-full">
                     <ExternalLink className={`${iconSizes.sm} flex-shrink-0`} />

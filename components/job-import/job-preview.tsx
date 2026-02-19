@@ -65,14 +65,6 @@ export default function JobPreview({ data }: JobPreviewProps) {
             <span className="col-span-2 text-gray-900">{data.email}</span>
           </div>
         )}
-        {data.description && (
-          <div className="grid grid-cols-3 gap-2">
-            <span className="font-medium text-gray-700">Beschreibung:</span>
-            <span className="col-span-2 text-gray-900 line-clamp-3">
-              {data.description}
-            </span>
-          </div>
-        )}
       </div>
     </Card>
   )

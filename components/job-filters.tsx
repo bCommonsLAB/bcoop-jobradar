@@ -397,7 +397,7 @@ export default function JobFilters({
             <ChefHat className="w-3 h-3 md:w-4 md:h-4 text-primary" />
             <div>
               <h3 className="text-base md:text-lg font-bold text-foreground">{t("filters.jobType")}</h3>
-              <p className="text-xs text-muted-foreground hidden md:block">Wähle deinen Arbeitsbereich</p>
+              <p className="text-xs text-muted-foreground hidden md:block">{t("filters.jobTypeDescription")}</p>
             </div>
           </div>
         </div>
@@ -464,7 +464,7 @@ export default function JobFilters({
           className="w-full py-1.5 md:py-2 px-2 md:px-3 rounded-md md:rounded-lg text-[10px] md:text-xs font-semibold transition-all duration-200 border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-cyan-50 text-primary hover:border-primary hover:shadow-sm hover:scale-[1.02] flex items-center justify-center gap-1"
         >
           <Search className="w-3 h-3 md:w-3.5 md:h-3.5" />
-          Altri lavori
+          {t("filters.otherJobs")}
         </button>
         {showJobTypeError && (
           <div className="mt-2 text-sm text-destructive flex items-center gap-1">
@@ -480,7 +480,7 @@ export default function JobFilters({
           <Calendar className="w-3 h-3 md:w-4 md:h-4 text-primary" />
           <div>
             <h3 className="text-base md:text-lg font-bold text-foreground">{t("filters.period")}</h3>
-            <p className="text-xs text-muted-foreground hidden md:block">Wann wurde der Job veröffentlicht?</p>
+            <p className="text-xs text-muted-foreground hidden md:block">{t("filters.periodDescription")}</p>
           </div>
         </div>
         <div className="grid grid-cols-3 gap-1 md:gap-2">
@@ -513,7 +513,7 @@ export default function JobFilters({
           <MapPin className={`${iconSizes.md} text-primary`} />
           <div>
             <h3 className="text-base md:text-lg font-bold text-foreground">{t("filters.location")}</h3>
-            <p className="text-xs text-muted-foreground hidden md:block">Wo möchtest du arbeiten?</p>
+            <p className="text-xs text-muted-foreground hidden md:block">{t("filters.locationDescription")}</p>
           </div>
         </div>
         <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-1 md:gap-2">

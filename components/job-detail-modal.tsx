@@ -18,7 +18,9 @@ import {
   DollarSign,
 } from "lucide-react"
 import { useTranslation } from "@/hooks/use-translation"
+import { useLanguage } from "@/components/language-provider"
 import { getStartDateDisplay } from "@/lib/format-job-date"
+import { translateJobContent } from "@/lib/job-translation"
 import type { Job } from "@/lib/job"
 
 interface JobDetailModalProps {
@@ -44,10 +46,14 @@ function getSalaryDisplay(job: Job): string | null {
 
 export default function JobDetailModal({ job, isOpen, onClose }: JobDetailModalProps) {
   const { t } = useTranslation()
+  const { language } = useLanguage()
+  
+  // Übersetze Job-Inhalte basierend auf der ausgewählten Sprache
+  const translatedJob = translateJobContent(job, language)
+  
   const companyInitial = job.company.charAt(0).toUpperCase()
-  const tasks = job.tasks ?? []
-  const requirements = job.requirements ?? []
-  const descriptionText = job.fullDescription || job.description || ""
+  const tasks = translatedJob.tasks
+  const requirements = translatedJob.requirements
   const startDateLabel = getStartDateDisplay(job.startDate)
   const hoursDisplay = getHoursDisplay(job)
   const salaryDisplay = getSalaryDisplay(job)
@@ -60,7 +66,7 @@ export default function JobDetailModal({ job, isOpen, onClose }: JobDetailModalP
   const handleEmail = () => {
     const contactEmail = job.contactEmail || job.email
     if (contactEmail) {
-      window.location.href = `mailto:${contactEmail}?subject=Candidatura: ${job.title}${job.jobReference ? ` (Rif: ${job.jobReference})` : ""}`
+      window.location.href = `mailto:${contactEmail}?subject=Candidatura: ${translatedJob.title}${job.jobReference ? ` (Rif: ${job.jobReference})` : ""}`
     }
   }
 
@@ -72,7 +78,7 @@ export default function JobDetailModal({ job, isOpen, onClose }: JobDetailModalP
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 rounded-3xl" showCloseButton={false}>
         <DialogHeader className="relative p-6 pb-4 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent">
-          <DialogTitle className="sr-only">{job.title}</DialogTitle>
+          <DialogTitle className="sr-only">{translatedJob.title}</DialogTitle>
           <button
             onClick={onClose}
             className="absolute right-4 top-4 rounded-full p-2 hover:bg-accent transition-colors z-10"
@@ -87,7 +93,7 @@ export default function JobDetailModal({ job, isOpen, onClose }: JobDetailModalP
             <div className="w-16 h-16 rounded-2xl bg-card shadow-lg flex items-center justify-center mb-4">
               <span className="text-2xl font-bold text-primary">{companyInitial}</span>
             </div>
-            <h2 className="text-2xl font-bold text-center mb-1">{job.title}</h2>
+            <h2 className="text-2xl font-bold text-center mb-1">{translatedJob.title}</h2>
             <p className="text-sm text-primary font-semibold">{job.company}</p>
           </div>
 
@@ -172,11 +178,6 @@ export default function JobDetailModal({ job, isOpen, onClose }: JobDetailModalP
                 </div>
               )}
             </div>
-          )}
-
-          {/* Description */}
-          {descriptionText && (
-            <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{descriptionText}</p>
           )}
 
           {/* Cosa farai */}

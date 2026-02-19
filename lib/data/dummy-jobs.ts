@@ -24,8 +24,6 @@ export const dummyJobs: Job[] = [
     hasMeals: true,
     phone: "0473 448545",
     email: "office@kassian.it",
-    description:
-      "Cerchiamo una persona per lavare i piatti nella cucina del nostro hotel a 4 stelle. Non serve esperienza, ti insegniamo noi! Lavorerai insieme al nostro team di cucina in un ambiente amichevole. Offriamo alloggio in camera singola e tutti i pasti inclusi.",
     tasks: [
       "Lavare piatti, pentole e bicchieri",
       "Tenere la cucina pulita e ordinata",
@@ -55,7 +53,6 @@ export const dummyJobs: Job[] = [
     hasMeals: true,
     phone: "0471 234567",
     email: "info@ristorante-montagna.it",
-    description: "Cerchiamo lavapiatti per turni serali. Ambiente giovane e dinamico.",
     tasks: ["Pulizia stoviglie e attrezzature da cucina", "Supporto al team di cucina"],
     requirements: ["Disponibilità per turni serali", "Buona resistenza fisica", "Puntualità e affidabilità"],
     experienceLevel: "Principiante",
@@ -75,8 +72,6 @@ export const dummyJobs: Job[] = [
     hasMeals: true,
     phone: "0472 345678",
     email: "jobs@hotel-alpino.it",
-    description:
-      "Cerchiamo lavapiatti per la stagione invernale (dicembre-marzo). Offriamo alloggio in camera condivisa e vitto completo. Ambiente internazionale e possibilità di crescita.",
     tasks: ["Lavare piatti e pentole", "Tenere la cucina ordinata", "Collaborare con il team"],
     requirements: ["Disponibilità per stagione completa", "Buona salute fisica", "Spirito di squadra"],
     experienceLevel: "Principiante",
@@ -96,8 +91,6 @@ export const dummyJobs: Job[] = [
     hasMeals: true,
     phone: "0473 987654",
     email: "jobs@hotel-dolomiti.it",
-    description:
-      "Cerchiamo personale per le pulizie delle camere e degli spazi comuni. Persona attenta ai dettagli, affidabile e con buone capacità organizzative.",
     tasks: ["Pulizia camere", "Preparazione servizi per gli ospiti", "Manutenzione spazi comuni"],
     requirements: [
       "Esperienza nel settore alberghiero (preferibile)",
@@ -122,8 +115,6 @@ export const dummyJobs: Job[] = [
     hasMeals: true,
     phone: "0474 456789",
     email: "hr@hotel-cristallo.it",
-    description:
-      "Cerchiamo personale per la pulizia e preparazione delle camere. Il lavoro include anche la preparazione dei servizi per gli ospiti e la manutenzione degli spazi comuni.",
     tasks: ["Pulizia e preparazione camere", "Servizi per gli ospiti", "Spazi comuni"],
     requirements: [
       "Precisione e cura dei dettagli",
@@ -149,8 +140,6 @@ export const dummyJobs: Job[] = [
     hasMeals: true,
     phone: "0472 567890",
     email: "info@hotel-panorama.it",
-    description:
-      "Cerchiamo un/a aiutante generico per supportare il team in varie mansioni: supporto in cucina, pulizie, servizio, magazzino. Ideale per chi vuole imparare e crescere professionalmente.",
     tasks: ["Supporto in cucina", "Pulizie e servizio", "Magazzino"],
     requirements: ["Flessibilità e adattabilità", "Voglia di imparare", "Buona resistenza fisica"],
     experienceLevel: "Principiante",
@@ -172,8 +161,6 @@ export const dummyJobs: Job[] = [
     hasMeals: true,
     phone: "0473 112233",
     email: "jobs@ristorante-gourmet.it",
-    description:
-      "Cerchiamo un/a aiutante per supportare sia in cucina che in sala. Preparazione ingredienti, supporto ai cuochi e servizio ai tavoli.",
     tasks: ["Preparazione ingredienti", "Supporto ai cuochi", "Servizio ai tavoli"],
     requirements: ["Interesse per la cucina", "Buona presenza", "Puntualità", "Disponibilità weekend e serali"],
     experienceLevel: "Principiante",
@@ -193,8 +180,6 @@ export const dummyJobs: Job[] = [
     hasMeals: true,
     phone: "0471 123456",
     email: "info@ristorante-altoadige.it",
-    description:
-      "Per il nostro ristorante cerchiamo un aiuto cuoco per supportare il nostro team nella preparazione dei piatti. Offriamo orari flessibili e un ambiente di lavoro stimolante.",
     tasks: ["Preparazione piatti", "Supporto in cucina", "Igiene e ordine"],
     requirements: [
       "Esperienza base in cucina",
@@ -219,8 +204,6 @@ export const dummyJobs: Job[] = [
     hasMeals: true,
     phone: "0474 789012",
     email: "kitchen@hotel-luxury.it",
-    description:
-      "Cerchiamo un/a commis di cucina con esperienza per il nostro ristorante gourmet. Preparazione di piatti raffinati sotto la guida dello chef.",
     tasks: ["Preparazione piatti raffinati", "Supporto allo chef", "Organizzazione cucina"],
     requirements: [
       "Esperienza minima 2 anni in cucina",
@@ -247,8 +230,6 @@ export const dummyJobs: Job[] = [
     hasMeals: true,
     phone: "0473 987654",
     email: "service@hotel-dolomiti.it",
-    description:
-      "Cerchiamo cameriere/a per il nostro ristorante. Il lavoro prevede il servizio ai tavoli, la preparazione della sala e l'assistenza agli ospiti. Formazione fornita.",
     tasks: ["Servizio ai tavoli", "Preparazione sala", "Assistenza agli ospiti"],
     requirements: [
       "Buona presenza",

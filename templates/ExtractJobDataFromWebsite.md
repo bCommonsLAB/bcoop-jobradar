@@ -8,7 +8,6 @@ startDate: {{startDate|Start date in format DD.MM.YYYY or "subito" if immediate 
 jobType: {{jobType|Job type: one of "dishwasher", "kitchen", "housekeeping", "helper", "service". Infer from title/description if not explicitly stated.}}
 phone: {{phone|Contact phone number exactly as shown.}}
 email: {{email|Contact email address exactly as shown.}}
-description: {{description|Job description verbatim. Do summarize in 50 words.}}
 hasAccommodation: {{hasAccommodation|Boolean: true if accommodation is provided, false otherwise.}}
 hasMeals: {{hasMeals|Boolean: true if meals are provided, false otherwise.}}
 companyDescription: {{companyDescription|Company description verbatim; leave empty if none.}}
@@ -57,7 +56,7 @@ Rules:
   - "Bressanone" or "Brixen" → "bressanone"
   - "Brunico" or "Bruneck" → "brunico"
   - "Vipiteno" or "Sterzing" → "vipiteno"
-- For `jobType`, infer from `title` or `description` if not explicitly stated:
+- For `jobType`, infer from `title` if not explicitly stated:
   - Keywords: "dishwasher", "lavapiatti", "spül", "spüler" → "dishwasher"
   - Keywords: "kitchen", "cucina", "koch", "chef", "cook", "cuoco", "aiuto cuoco", "commis" → "kitchen"
   - Keywords: "housekeeping", "pulizie", "reinigung", "hauswirtschaft", "cleaning" → "housekeeping"
@@ -73,7 +72,7 @@ Rules:
 - Trim leading/trailing whitespace; collapse accidental double spaces inside fields.
 
 Validation:
-- Ensure `title`, `company`, `location`, `employmentType`, `startDate`, `phone`, `email`, `description` are not empty (required fields).
+- Ensure `title`, `company`, `location`, `employmentType`, `startDate`, `phone`, `email` are not empty (required fields).
 - Ensure `jobType` is one of: "dishwasher", "kitchen", "housekeeping", "helper", "service".
 - Ensure `locationRegion` is one of: "bolzano", "merano", "bressanone", "brunico", "vipiteno".
 
