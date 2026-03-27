@@ -62,7 +62,6 @@ export default function JobFilters({
     }
     return ["all"]
   })
-  const [timeframe, setTimeframe] = useState<string>(initialFilters?.timeframe || "all")
   const [locations, setLocations] = useState<string[]>(() => {
     if (initialFilters?.locations && initialFilters.locations.length > 0) {
       return initialFilters.locations
@@ -80,7 +79,6 @@ export default function JobFilters({
   useEffect(() => {
     if (initialFilters) {
       setJobTypes(initialFilters.jobTypes && initialFilters.jobTypes.length > 0 ? initialFilters.jobTypes : ["all"])
-      setTimeframe(initialFilters.timeframe || "all")
       setLocations(initialFilters.locations && initialFilters.locations.length > 0 ? initialFilters.locations : ["all"])
       setNoQualificationRequired(initialFilters.noQualificationRequired || false)
     }
@@ -164,7 +162,7 @@ export default function JobFilters({
     setSearchQuery("")
     
     if (autoApply) {
-      onSubmit({ jobTypes: newJobTypes, timeframe, locations, noQualificationRequired })
+      onSubmit({ jobTypes: newJobTypes, timeframe: "all", locations, noQualificationRequired })
     }
   }
 
@@ -174,7 +172,7 @@ export default function JobFilters({
     setJobTypes(jobTypes.filter((t) => t !== jobValue))
     
     if (autoApply) {
-      onSubmit({ jobTypes: jobTypes.filter((t) => t !== jobValue), timeframe, locations, noQualificationRequired })
+      onSubmit({ jobTypes: jobTypes.filter((t) => t !== jobValue), timeframe: "all", locations, noQualificationRequired })
     }
   }
 
@@ -189,7 +187,7 @@ export default function JobFilters({
     
     // Nur submitten, wenn alle Kategorien ausgefüllt sind
     if (hasJobTypes && hasLocations) {
-      onSubmit({ jobTypes, timeframe, locations, noQualificationRequired })
+      onSubmit({ jobTypes, timeframe: "all", locations, noQualificationRequired })
     }
   }
 
@@ -206,7 +204,7 @@ export default function JobFilters({
     
     // Filter submitten ohne Job-Typen zu ändern
     if (autoApply) {
-      onSubmit({ jobTypes, timeframe, locations, noQualificationRequired: checked })
+      onSubmit({ jobTypes, timeframe: "all", locations, noQualificationRequired: checked })
     }
   }
   
@@ -217,7 +215,7 @@ export default function JobFilters({
       description: t("filters.allJobsShownDescription") || "Alle verfügbaren Jobs werden jetzt angezeigt.",
     })
     if (autoApply) {
-      onSubmit({ jobTypes: ["all"], timeframe, locations, noQualificationRequired })
+      onSubmit({ jobTypes: ["all"], timeframe: "all", locations, noQualificationRequired })
     }
   }
 
@@ -240,7 +238,7 @@ export default function JobFilters({
     setJobTypes(newJobTypes)
     
     if (autoApply) {
-      onSubmit({ jobTypes: newJobTypes, timeframe, locations, noQualificationRequired })
+      onSubmit({ jobTypes: newJobTypes, timeframe: "all", locations, noQualificationRequired })
     }
   }
 
@@ -263,16 +261,7 @@ export default function JobFilters({
     setLocations(newLocations)
     
     if (autoApply) {
-      onSubmit({ jobTypes, timeframe, locations: newLocations, noQualificationRequired })
-    }
-  }
-
-  const handleFilterChange = (filterType: "timeframe", value: string) => {
-    if (filterType === "timeframe") {
-      setTimeframe(value)
-      if (autoApply) {
-        onSubmit({ jobTypes, timeframe: value, locations, noQualificationRequired })
-      }
+      onSubmit({ jobTypes, timeframe: "all", locations: newLocations, noQualificationRequired })
     }
   }
 
@@ -280,18 +269,17 @@ export default function JobFilters({
   const isFormValid = () => {
     const hasJobTypes = jobTypes.length > 0
     const hasLocations = locations.length > 0
-    const hasTimeframe = timeframe !== "" && timeframe !== undefined
     
-    return hasJobTypes && hasLocations && hasTimeframe
+    return hasJobTypes && hasLocations
   }
 
   const jobTypeOptions = [
     { value: "all", label: t("jobTypes.all"), icon: Sparkles },
+    { value: "helper", label: t("jobTypes.helper"), icon: Users },
+    { value: "service", label: t("jobTypes.service"), icon: Coffee },
     { value: "kitchen", label: t("jobTypes.kitchen"), icon: ChefHat },
     { value: "dishwasher", label: t("jobTypes.dishwasher"), icon: UtensilsCrossed },
     { value: "housekeeping", label: t("jobTypes.housekeeping"), icon: Bed },
-    { value: "helper", label: t("jobTypes.helper"), icon: Users },
-    { value: "service", label: t("jobTypes.service"), icon: Coffee },
   ]
 
   const locationOptions = [
@@ -472,39 +460,6 @@ export default function JobFilters({
             <span>{t("filters.pleaseSelectFilter")}</span>
           </div>
         )}
-      </div>
-
-      {/* Timeframe - Verbesserte Gruppierung */}
-      <div className="space-y-3 md:space-y-4 p-4 md:p-6 rounded-lg md:rounded-xl border border-border/50 bg-muted/30">
-        <div className="flex items-center gap-2 mb-3">
-          <Calendar className="w-3 h-3 md:w-4 md:h-4 text-primary" />
-          <div>
-            <h3 className="text-base md:text-lg font-bold text-foreground">{t("filters.period")}</h3>
-            <p className="text-xs text-muted-foreground hidden md:block">{t("filters.periodDescription")}</p>
-          </div>
-        </div>
-        <div className="grid grid-cols-3 gap-1 md:gap-2">
-          {[
-            { value: "all", label: t("timeframes.all") },
-            { value: "week", label: t("timeframes.week") },
-            { value: "month", label: t("timeframes.month") },
-          ].map((time) => (
-            <button
-              key={time.value}
-              onClick={() => handleFilterChange("timeframe", time.value)}
-              className={cn(
-                "py-1.5 md:py-2 px-1 md:px-2 rounded-md md:rounded-lg text-[10px] md:text-xs font-bold transition-all duration-200 border-2 touch-manipulation min-h-[44px]",
-                timeframe === time.value
-                  ? "bg-gradient-to-br from-primary to-cyan-600 text-white border-primary shadow-md scale-[1.02] ring-1 ring-primary/30"
-                  : "bg-gradient-to-br from-white to-gray-50 text-foreground border-border/50 hover:border-primary/50 hover:shadow-sm hover:scale-[1.02] active:scale-95"
-              )}
-              aria-label={`${time.label} ${timeframe === time.value ? "ausgewählt" : "auswählen"}`}
-              aria-pressed={timeframe === time.value}
-            >
-              {time.label}
-            </button>
-          ))}
-        </div>
       </div>
 
       {/* Location - Verbesserte Gruppierung */}

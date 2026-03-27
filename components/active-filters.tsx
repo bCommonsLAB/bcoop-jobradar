@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { X, Filter, Edit, ChevronDown, ChevronUp } from "lucide-react"
-import { ChefHat, UtensilsCrossed, Bed, Users, Coffee, MapPin, Calendar, Sparkles, GraduationCap } from "lucide-react"
+import { ChefHat, UtensilsCrossed, Bed, Users, Coffee, MapPin, Sparkles, GraduationCap } from "lucide-react"
 import { useTranslation } from "@/hooks/use-translation"
 import { getJobTypeTone } from "@/lib/job-type-colors"
 
@@ -99,7 +99,7 @@ export default function ActiveFilters({ filters, onRemoveFilter, onEditFilters }
   const [showDetails, setShowDetails] = useState(false)
   
   // Sicherheitsprüfung für filters
-  if (!filters || !filters.jobTypes || !filters.locations || !filters.timeframe) {
+  if (!filters || !filters.jobTypes || !filters.locations) {
     return null
   }
   
@@ -111,13 +111,6 @@ export default function ActiveFilters({ filters, onRemoveFilter, onEditFilters }
     housekeeping: { label: t("jobTypes.housekeeping"), icon: Bed },
     helper: { label: t("jobTypes.helper"), icon: Users },
     service: { label: t("jobTypes.service"), icon: Coffee },
-  }
-
-  // Mapping für Zeiträume
-  const timeframeLabels: Record<string, string> = {
-    all: t("timeframes.all"),
-    week: t("timeframes.week"),
-    month: t("timeframes.month"),
   }
 
   // Mapping für Orte
@@ -141,7 +134,7 @@ export default function ActiveFilters({ filters, onRemoveFilter, onEditFilters }
     ? ["all"]
     : filters.locations.filter((l) => l !== "all")
   const hasActiveFilters =
-    activeJobTypes.length > 0 || (filters.timeframe && filters.timeframe.length > 0) || activeLocations.length > 0 || filters.noQualificationRequired
+    activeJobTypes.length > 0 || activeLocations.length > 0 || filters.noQualificationRequired
 
   // Filter-Zählung
   // Chips für Gruppen vorbereiten
@@ -153,12 +146,6 @@ export default function ActiveFilters({ filters, onRemoveFilter, onEditFilters }
       icon: jobTypeInfo.icon,
     }
   })
-
-  const timeframeChips: FilterChip[] = filters.timeframe && filters.timeframe.length > 0 ? [{
-    label: timeframeLabels[filters.timeframe] || filters.timeframe,
-    value: filters.timeframe,
-    icon: Calendar,
-  }] : []
 
   const locationChips: FilterChip[] = activeLocations.map((location) => ({
     label: locationLabels[location] || location,
@@ -237,21 +224,6 @@ export default function ActiveFilters({ filters, onRemoveFilter, onEditFilters }
                 max={3}
                 onRemove={onRemoveFilter ? (value) => onRemoveFilter("jobTypes", value) : undefined}
                 filterType="jobTypes"
-              />
-            </div>
-          )}
-
-          {/* Zeitraum Gruppe */}
-          {timeframeChips.length > 0 && (
-            <div>
-              <h4 className="text-sm font-semibold text-muted-foreground mb-2">
-                {t("filters.timeframe")}
-              </h4>
-              <FilterChipGroup
-                chips={timeframeChips}
-                max={3}
-                onRemove={onRemoveFilter ? () => onRemoveFilter("timeframe") : undefined}
-                filterType="timeframe"
               />
             </div>
           )}

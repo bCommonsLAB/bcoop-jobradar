@@ -184,7 +184,7 @@ export default function JobList({ filters, onJobSelect }: JobListProps) {
       setIsFilterLoading(false)
     }, 400)
     return () => clearTimeout(timer)
-  }, [filters.jobTypes, filters.timeframe, filters.locations])
+  }, [filters.jobTypes, filters.locations])
 
   const filteredJobs = jobs.filter((job) => {
     // Filter by job types (array)
@@ -205,26 +205,6 @@ export default function JobList({ filters, onJobSelect }: JobListProps) {
       
       if (!matchesJobType) {
         return false
-      }
-    }
-
-    // Filter by timeframe
-    if (filters.timeframe !== "all") {
-      const today = new Date()
-      const jobDate = parseJobDate(job.startDate)
-
-      if (filters.timeframe === "week") {
-        const oneWeekFromNow = new Date(today)
-        oneWeekFromNow.setDate(today.getDate() + 7)
-        if (jobDate > oneWeekFromNow) {
-          return false
-        }
-      } else if (filters.timeframe === "month") {
-        const oneMonthFromNow = new Date(today)
-        oneMonthFromNow.setMonth(today.getMonth() + 1)
-        if (jobDate > oneMonthFromNow) {
-          return false
-        }
       }
     }
 
@@ -253,19 +233,6 @@ export default function JobList({ filters, onJobSelect }: JobListProps) {
 
     return true
   })
-
-  // Helper function to parse job start dates
-  function parseJobDate(dateStr: string): Date {
-    if (dateStr.toLowerCase() === "subito") {
-      return new Date() // "Subito" means immediate start
-    }
-    // Parse DD.MM.YYYY format
-    const parts = dateStr.split(".")
-    if (parts.length === 3) {
-      return new Date(Number.parseInt(parts[2]), Number.parseInt(parts[1]) - 1, Number.parseInt(parts[0]))
-    }
-    return new Date()
-  }
 
   // Mapping zwischen locationRegion und Ortsnamen
   const getCityNameForRegion = (region: string): string => {
@@ -346,7 +313,7 @@ export default function JobList({ filters, onJobSelect }: JobListProps) {
           {loadError}
         </div>
       )}
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 gap-1.5 md:gap-2.5 lg:gap-3">
+      <div className="grid grid-cols-1 gap-1.5 md:gap-2.5 lg:gap-3">
         {isLoading ? (
           <>
             <JobCardSkeleton />

@@ -38,7 +38,7 @@ function loadFiltersFromStorage(): FilterState | null {
     const parsed = JSON.parse(stored)
     const loadedFilters = {
       jobTypes: Array.isArray(parsed.jobTypes) ? parsed.jobTypes : ["all"],
-      timeframe: typeof parsed.timeframe === "string" ? parsed.timeframe : "all",
+      timeframe: "all",
       locations: Array.isArray(parsed.locations) ? parsed.locations : ["all"],
       noQualificationRequired: typeof parsed.noQualificationRequired === "boolean" ? parsed.noQualificationRequired : false,
     }

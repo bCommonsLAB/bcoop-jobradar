@@ -113,12 +113,12 @@ export function LanguageSelector({ onLanguageSelect, isOpen, onClose, isInitialS
   }
 
   const mainContent = (
-    <div className={`max-w-2xl w-full bg-card rounded-3xl shadow-lg p-10 md:p-16 lg:p-20 relative z-[102] isolate ${isInitialSelection ? 'border border-border/40' : ''}`}>
-      <div className="text-center mb-12">
-        <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-3xl mb-6 shadow-lg">
-          <Languages className="w-10 h-10 text-white" />
+    <div className={`max-w-xl w-full bg-card rounded-3xl shadow-lg p-4 sm:p-6 md:p-10 lg:p-12 relative z-[102] isolate ${isInitialSelection ? 'border border-border/40' : ''}`}>
+      <div className="text-center mb-6 sm:mb-8">
+        <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-3xl mb-3 sm:mb-4 shadow-lg">
+          <Languages className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
         </div>
-        <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground mb-2 sm:mb-3">
           Scegli la tua lingua
           <br />
           Wähle deine Sprache
@@ -127,22 +127,22 @@ export function LanguageSelector({ onLanguageSelect, isOpen, onClose, isInitialS
         </h1>
       </div>
 
-      <div className="space-y-4 mb-8">
+      <div className="space-y-2.5 sm:space-y-3 mb-5 sm:mb-6">
         {languages.map((language) => (
           <button
             key={language.code}
             onClick={(e) => handleLanguageSelect(e, language.code)}
-            className={`w-full p-6 rounded-2xl border-2 transition-all duration-200 flex items-center gap-4 hover:shadow-lg ${
+            className={`w-full p-3 sm:p-4 md:p-5 rounded-2xl border-2 transition-all duration-200 flex items-center gap-2.5 sm:gap-3 hover:shadow-lg ${
               selectedLanguage === language.code
                 ? "border-teal-500 bg-teal-50 shadow-md"
                 : "border-border bg-card hover:border-teal-300"
             }`}
           >
-            <span className="text-4xl">{language.flag}</span>
-            <span className="text-2xl font-semibold text-foreground flex-1 text-left">{language.name}</span>
+            <span className="text-2xl sm:text-3xl">{language.flag}</span>
+            <span className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground flex-1 text-left">{language.name}</span>
             {selectedLanguage === language.code && (
-              <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center">
-                <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="w-5 h-5 bg-teal-500 rounded-full flex items-center justify-center">
+                <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
@@ -152,13 +152,13 @@ export function LanguageSelector({ onLanguageSelect, isOpen, onClose, isInitialS
 
         <button
           onClick={() => setShowMoreLanguagesModal(true)}
-          className="w-full p-6 rounded-2xl border-2 border-dashed border-border bg-gray-50 hover:bg-gray-100 hover:border-teal-300 transition-all duration-200 flex items-center gap-4"
+          className="w-full p-3 sm:p-4 md:p-5 rounded-2xl border-2 border-dashed border-border bg-gray-50 hover:bg-gray-100 hover:border-teal-300 transition-all duration-200 flex items-center gap-2.5 sm:gap-3"
         >
-          <Languages className="w-8 h-8 text-teal-600" />
-          <span className="text-xl font-semibold text-foreground flex-1 text-left">
+          <Languages className="w-6 h-6 sm:w-7 sm:h-7 text-teal-600" />
+          <span className="text-base sm:text-lg md:text-xl font-semibold text-foreground flex-1 text-left">
             Altre lingue / Weitere Sprachen / More languages
           </span>
-          <svg className="w-6 h-6 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-5 h-5 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
         </button>
@@ -175,15 +175,15 @@ export function LanguageSelector({ onLanguageSelect, isOpen, onClose, isInitialS
         </div>
         {showMoreLanguagesModal && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-[200] animate-in fade-in duration-200">
-            <div className="bg-card rounded-3xl shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden animate-in zoom-in-95 duration-200 relative">
+            <div className="bg-card rounded-3xl shadow-2xl w-full max-w-xl max-h-[85vh] overflow-hidden animate-in zoom-in-95 duration-200 relative">
               {/* Modal Header */}
-              <div className="bg-gradient-to-r from-teal-500 via-cyan-500 to-teal-600 p-6 flex items-center justify-between sticky top-0 z-10">
+              <div className="bg-gradient-to-r from-teal-500 via-cyan-500 to-teal-600 p-3 sm:p-4 flex items-center justify-between sticky top-0 z-10">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
-                    <Languages className="w-7 h-7 text-white" />
+                  <div className="w-10 h-10 bg-white/20 rounded-2xl flex items-center justify-center">
+                    <Languages className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold text-white">Altre lingue</h2>
+                    <h2 className="text-xl font-bold text-white">Altre lingue</h2>
                     <p className="text-sm text-white/90">Weitere Sprachen / More languages</p>
                   </div>
                 </div>
@@ -196,7 +196,7 @@ export function LanguageSelector({ onLanguageSelect, isOpen, onClose, isInitialS
               </div>
 
               {/* Search Section */}
-              <div className="p-6 pb-4 border-b border-border">
+              <div className="p-3 sm:p-4 pb-2.5 sm:pb-3 border-b border-border">
                 <div className="relative">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <input
@@ -204,38 +204,38 @@ export function LanguageSelector({ onLanguageSelect, isOpen, onClose, isInitialS
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Sprache suchen / Cerca lingua / Search language..."
-                    className="w-full pl-12 pr-4 py-4 rounded-xl border-2 border-border focus:border-teal-500 focus:outline-none text-base transition-colors"
+                    className="w-full pl-12 pr-4 py-2.5 rounded-xl border-2 border-border focus:border-teal-500 focus:outline-none text-sm transition-colors"
                   />
                 </div>
               </div>
 
               {/* Modal Content */}
-              <div className="p-6 overflow-y-auto max-h-[calc(85vh-200px)]">
+              <div className="p-3 sm:p-4 overflow-y-auto max-h-[calc(85vh-200px)]">
                 {filteredLanguages.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {filteredLanguages.map((language) => {
                       const isNew = language.code === "mk" // Mazedonisch ist neu
                       return (
                         <button
                           key={language.code}
                           onClick={(e) => handleLanguageSelect(e, language.code)}
-                          className={`p-5 rounded-2xl border-2 transition-all duration-200 flex flex-col items-start gap-2 hover:shadow-lg relative ${
+                          className={`p-3 sm:p-4 rounded-2xl border-2 transition-all duration-200 flex flex-col items-start gap-2 hover:shadow-lg relative ${
                             selectedLanguage === language.code
                               ? "border-teal-500 bg-teal-50 shadow-md"
                               : "border-border bg-card hover:border-teal-300"
                           }`}
                         >
                           <div className="flex items-center gap-3 w-full">
-                            <span className="text-3xl">{language.flag}</span>
-                            <span className="text-lg font-bold text-foreground flex-1 text-left">{language.name}</span>
+                            <span className="text-2xl">{language.flag}</span>
+                            <span className="text-base font-bold text-foreground flex-1 text-left">{language.name}</span>
                             {isNew && (
                               <Badge variant="default" className="bg-primary text-white shadow-md text-[10px] shrink-0">
                                 Neu
                               </Badge>
                             )}
                             {selectedLanguage === language.code && (
-                              <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center shrink-0">
-                                <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <div className="w-5 h-5 bg-teal-500 rounded-full flex items-center justify-center shrink-0">
+                                <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                                 </svg>
                               </div>
@@ -250,8 +250,8 @@ export function LanguageSelector({ onLanguageSelect, isOpen, onClose, isInitialS
                   </div>
                 ) : (
                   <div className="text-center py-12">
-                    <Search className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-50" />
-                    <p className="text-lg text-muted-foreground">
+                    <Search className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-50" />
+                    <p className="text-base text-muted-foreground">
                       Keine Sprache gefunden
                       <br />
                       Nessuna lingua trovata
@@ -276,7 +276,7 @@ export function LanguageSelector({ onLanguageSelect, isOpen, onClose, isInitialS
   return (
     <>
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200" style={{ isolation: 'isolate', transform: 'translateZ(0)' }}>
-        <div className="relative max-w-2xl w-full z-[101] overflow-visible" style={{ transform: 'translateZ(0)' }}>
+        <div className="relative max-w-xl w-full z-[101] overflow-visible" style={{ transform: 'translateZ(0)' }}>
           {mainContent}
           {onClose && (
             <button
@@ -290,15 +290,15 @@ export function LanguageSelector({ onLanguageSelect, isOpen, onClose, isInitialS
       </div>
       {showMoreLanguagesModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-[110] animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden animate-in zoom-in-95 duration-200 relative">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-xl max-h-[85vh] overflow-hidden animate-in zoom-in-95 duration-200 relative">
             {/* Modal Header */}
-            <div className="bg-gradient-to-r from-teal-500 via-cyan-500 to-teal-600 p-6 flex items-center justify-between sticky top-0 z-10">
+            <div className="bg-gradient-to-r from-teal-500 via-cyan-500 to-teal-600 p-4 flex items-center justify-between sticky top-0 z-10">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
-                  <Languages className="w-7 h-7 text-white" />
+                <div className="w-10 h-10 bg-white/20 rounded-2xl flex items-center justify-center">
+                  <Languages className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-white">Altre lingue</h2>
+                  <h2 className="text-xl font-bold text-white">Altre lingue</h2>
                   <p className="text-sm text-white/90">Weitere Sprachen / More languages</p>
                 </div>
               </div>
@@ -311,7 +311,7 @@ export function LanguageSelector({ onLanguageSelect, isOpen, onClose, isInitialS
             </div>
 
             {/* Search Section */}
-            <div className="p-6 pb-4 border-b border-border">
+            <div className="p-4 pb-3 border-b border-border">
               <div className="relative">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <input
@@ -319,38 +319,38 @@ export function LanguageSelector({ onLanguageSelect, isOpen, onClose, isInitialS
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Sprache suchen / Cerca lingua / Search language..."
-                  className="w-full pl-12 pr-4 py-4 rounded-xl border-2 border-border focus:border-teal-500 focus:outline-none text-base transition-colors"
+                  className="w-full pl-12 pr-4 py-3 rounded-xl border-2 border-border focus:border-teal-500 focus:outline-none text-sm transition-colors"
                 />
               </div>
             </div>
 
             {/* Modal Content */}
-            <div className="p-6 overflow-y-auto max-h-[calc(85vh-200px)]">
+            <div className="p-4 overflow-y-auto max-h-[calc(85vh-200px)]">
               {filteredLanguages.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {filteredLanguages.map((language) => {
                     const isNew = language.code === "mk" // Mazedonisch ist neu
                     return (
                       <button
                         key={language.code}
                         onClick={(e) => handleLanguageSelect(e, language.code)}
-                        className={`p-5 rounded-2xl border-2 transition-all duration-200 flex flex-col items-start gap-2 hover:shadow-lg relative ${
+                        className={`p-4 rounded-2xl border-2 transition-all duration-200 flex flex-col items-start gap-2 hover:shadow-lg relative ${
                           selectedLanguage === language.code
                             ? "border-teal-500 bg-teal-50 shadow-md"
                             : "border-border bg-card hover:border-teal-300"
                         }`}
                       >
                         <div className="flex items-center gap-3 w-full">
-                          <span className="text-3xl">{language.flag}</span>
-                          <span className="text-lg font-bold text-foreground flex-1 text-left">{language.name}</span>
+                          <span className="text-2xl">{language.flag}</span>
+                          <span className="text-base font-bold text-foreground flex-1 text-left">{language.name}</span>
                           {isNew && (
                             <Badge variant="default" className="bg-primary text-white shadow-md text-[10px] shrink-0">
                               Neu
                             </Badge>
                           )}
                           {selectedLanguage === language.code && (
-                            <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center shrink-0">
-                              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <div className="w-5 h-5 bg-teal-500 rounded-full flex items-center justify-center shrink-0">
+                              <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                               </svg>
                             </div>
@@ -365,8 +365,8 @@ export function LanguageSelector({ onLanguageSelect, isOpen, onClose, isInitialS
                 </div>
               ) : (
                 <div className="text-center py-12">
-                  <Search className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-50" />
-                  <p className="text-lg text-muted-foreground">
+                  <Search className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-50" />
+                  <p className="text-base text-muted-foreground">
                     Keine Sprache gefunden
                     <br />
                     Nessuna lingua trovata
