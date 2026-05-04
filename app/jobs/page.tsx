@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import Image from "next/image"
 import Link from "next/link"
+import { useSearchParams } from "next/navigation"
 import { ArrowLeft, Languages, Heart } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import StepIndicator from "@/components/step-indicator"
@@ -66,6 +67,41 @@ function saveFiltersToStorage(filters: FilterState) {
   }
 }
 
+function readFiltersFromQuery(searchParams: URLSearchParams): FilterState | null {
+  const jobType = searchParams.get("jobType")
+  const location = searchParams.get("location")
+
+  const hasSingleParams = Boolean(jobType || location)
+  const hasMultiParams = Boolean(searchParams.get("jobTypes") || searchParams.get("locations"))
+  const hasNoQualification = searchParams.get("noQualificationRequired") === "1"
+
+  if (!hasSingleParams && !hasMultiParams && !hasNoQualification) {
+    return null
+  }
+
+  const jobTypesFromQuery = searchParams.get("jobTypes")
+  const locationsFromQuery = searchParams.get("locations")
+
+  const parsedJobTypes = jobTypesFromQuery
+    ? jobTypesFromQuery.split(",").map((item) => item.trim()).filter(Boolean)
+    : jobType
+      ? [jobType]
+      : ["all"]
+
+  const parsedLocations = locationsFromQuery
+    ? locationsFromQuery.split(",").map((item) => item.trim()).filter(Boolean)
+    : location
+      ? [location]
+      : ["all"]
+
+  return {
+    jobTypes: parsedJobTypes.length > 0 ? parsedJobTypes : ["all"],
+    timeframe: "all",
+    locations: parsedLocations.length > 0 ? parsedLocations : ["all"],
+    noQualificationRequired: hasNoQualification,
+  }
+}
+
 function JobsPageContent() {
   // Initialisiere Filter aus localStorage oder mit Standard-Werten
   const [filters, setFilters] = useState<FilterState>(() => {
@@ -87,6 +123,7 @@ function JobsPageContent() {
   // Starte immer bei Step 1 beim Neuladen der Seite
   const [currentStep, setCurrentStep] = useState<1 | 2>(1)
   const [hasUsedApp, setHasUsedApp] = useState<boolean>(false)
+  const searchParams = useSearchParams()
   const { resetLanguage } = useLanguage()
   const { t } = useTranslation()
 
@@ -136,6 +173,16 @@ function JobsPageContent() {
       }
     }
   }, [])
+
+  // Übernehme Filter aus URL-Parametern (z.B. /jobs?jobType=dishwasher&location=bolzano)
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    const nextFilters = readFiltersFromQuery(new URLSearchParams(searchParams.toString()))
+    if (!nextFilters) return
+    setFilters(nextFilters)
+    saveFiltersToStorage(nextFilters)
+    setCurrentStep(2)
+  }, [searchParams])
 
   // Auto-scroll to top when switching to step 2 (fallback)
   useEffect(() => {

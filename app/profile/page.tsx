@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { LanguageProvider } from "@/components/language-provider"
 import { LanguageToggleButton } from "@/components/language-toggle-button"
 import { ScrollToTop } from "@/components/scroll-to-top"
+import ProfileLinkCreator from "@/components/profile-link-creator"
 import { useTranslation } from "@/hooks/use-translation"
 
 function ProfilePageContent() {
@@ -57,13 +58,7 @@ function ProfilePageContent() {
         </Link>
       </div>
 
-      <div className="max-w-6xl mx-auto px-2 md:px-5 pt-2 md:pt-3 space-y-2 md:space-y-3">
-        <div className="flex flex-wrap gap-2 md:gap-3">
-          <div className="flex-1 min-w-0 py-2.5 md:py-3 px-3 md:px-4 rounded-xl bg-white/90 border border-border text-center text-sm md:text-base font-medium text-foreground">
-            {t("notifications.email")}
-          </div>
-        </div>
-      </div>
+      <ProfileLinkCreator />
 
       <ScrollToTop />
     </div>
